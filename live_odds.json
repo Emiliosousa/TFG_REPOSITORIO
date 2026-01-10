@@ -1,0 +1,90 @@
+[
+  {
+    "home_team": "Girona",
+    "away_team": "Osasuna",
+    "odds_1": 1.45,
+    "odds_x": 3.65,
+    "odds_2": 8.50,
+    "match_date": "Today"
+  },
+  {
+    "home_team": "Rayo Vallecano",
+    "away_team": "Mallorca",
+    "odds_1": 1.88,
+    "odds_x": 3.35,
+    "odds_2": 4.50,
+    "match_date": "Today"
+  },
+  {
+    "home_team": "Sevilla FC",
+    "away_team": "Celta Vigo",
+    "odds_1": 2.55,
+    "odds_x": 3.35,
+    "odds_2": 2.75,
+    "match_date": "Tomorrow"
+  },
+  {
+    "home_team": "Espanyol",
+    "away_team": "Girona",
+    "odds_1": 1.86,
+    "odds_x": 3.55,
+    "odds_2": 4.00,
+    "match_date": "Tomorrow"
+  },
+  {
+    "home_team": "Mallorca",
+    "away_team": "Athletic Bilbao",
+    "odds_1": 3.65,
+    "odds_x": 3.05,
+    "odds_2": 2.10,
+    "match_date": "Tomorrow"
+  },
+  {
+    "home_team": "Real Betis",
+    "away_team": "Villarreal",
+    "odds_1": 2.20,
+    "odds_x": 3.60,
+    "odds_2": 2.90,
+    "match_date": "Sunday"
+  },
+  {
+    "home_team": "Getafe",
+    "away_team": "Valencia",
+    "odds_1": 2.45,
+    "odds_x": 2.85,
+    "odds_2": 3.15,
+    "match_date": "Sunday"
+  },
+  {
+    "home_team": "Atlético Madrid",
+    "away_team": "Alavés",
+    "odds_1": 1.32,
+    "odds_x": 4.90,
+    "odds_2": 9.00,
+    "match_date": "Sunday"
+  },
+  {
+    "home_team": "Celta Vigo",
+    "away_team": "Rayo Vallecano",
+    "odds_1": 2.10,
+    "odds_x": 3.15,
+    "odds_2": 3.55,
+    "match_date": "Sunday"
+  },
+  {
+    "home_team": "Real Sociedad",
+    "away_team": "FC Barcelona",
+    "odds_1": 4.80,
+    "odds_x": 4.60,
+    "odds_2": 1.54,
+    "match_date": "Sunday"
+  },
+  {
+    "home_team": "FC Barcelona",
+    "away_team": "Real Madrid",
+    "odds_1": 1.94,
+    "odds_x": 4.10,
+    "odds_2": 3.40,
+    "match_date": "Supercopa Final"
+  }
+]

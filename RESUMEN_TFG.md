@@ -162,7 +162,7 @@ El umbral de 1.05 (5%) es para superar el margen del bookmaker.
 **Detección en tiempo real:**
 1. `run_live_odds.js` scrapes Winamax cada 5 min
 2. Guarda cuotas en `live_odds.json`
-3. `app_dashboard.py` carga el modelo
+3. `app_dashboard.py` carga el modelo con este comando: streamlit run app_dashboard.py
 4. Compara P_modelo vs P_implícita
 5. Alerta si hay value bet
 

@@ -1,0 +1,138 @@
+[
+  {
+    "home": "Brentford",
+    "away": "Arsenal",
+    "1": "6.36",
+    "X": "4.28",
+    "2": "1.55",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Everton",
+    "away": "Bournemouth",
+    "1": "2.22",
+    "X": "3.39",
+    "2": "3.47",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Nottingham Forest",
+    "away": "Wolverhampton",
+    "1": "1.99",
+    "X": "3.27",
+    "2": "3.88",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Tottenham",
+    "away": "Newcastle",
+    "1": "2.13",
+    "X": "3.23",
+    "2": "3.30",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "West Ham",
+    "away": "Manchester United",
+    "1": "2.08",
+    "X": "3.68",
+    "2": "3.42",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Aston Villa",
+    "away": "Brighton",
+    "1": "2.00",
+    "X": "3.07",
+    "2": "3.45",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Crystal Palace",
+    "away": "Burnley",
+    "1": "2.29",
+    "X": "3.64",
+    "2": "3.66",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Manchester City",
+    "away": "Fulham",
+    "1": "2.16",
+    "X": "3.68",
+    "2": "3.64",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Brentford",
+    "away": "Brighton",
+    "1": "2.24",
+    "X": "3.43",
+    "2": "3.49",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Chelsea",
+    "away": "Burnley",
+    "1": "1.42",
+    "X": "4.34",
+    "2": "6.39",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Crystal Palace",
+    "away": "Wolverhampton",
+    "1": "1.95",
+    "X": "3.20",
+    "2": "3.55",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Manchester City",
+    "away": "Newcastle",
+    "1": "6.90",
+    "X": "4.28",
+    "2": "1.50",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Nottingham Forest",
+    "away": "Liverpool",
+    "1": "6.49",
+    "X": "4.30",
+    "2": "1.48",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Tottenham",
+    "away": "Arsenal",
+    "1": "1.99",
+    "X": "3.36",
+    "2": "3.61",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "West Ham",
+    "away": "Bournemouth",
+    "1": "2.16",
+    "X": "3.26",
+    "2": "3.51",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Wolverhampton",
+    "away": "Arsenal",
+    "1": "6.61",
+    "X": "4.34",
+    "2": "1.40",
+    "source": "winamax_simulated"
+  },
+  {
+    "home": "Everton",
+    "away": "Manchester United",
+    "1": "2.27",
+    "X": "3.43",
+    "2": "3.56",
+    "source": "winamax_simulated"
+  }
+]

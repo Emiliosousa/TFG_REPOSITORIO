@@ -1,0 +1,47 @@
+[
+    {
+        "fold": 1,
+        "train_size": 99,
+        "test_size": 94,
+        "accuracy": 0.4362,
+        "precision": 0.4166,
+        "recall": 0.4362,
+        "f1": 0.4158
+    },
+    {
+        "fold": 2,
+        "train_size": 193,
+        "test_size": 94,
+        "accuracy": 0.3936,
+        "precision": 0.3573,
+        "recall": 0.3936,
+        "f1": 0.3634
+    },
+    {
+        "fold": 3,
+        "train_size": 287,
+        "test_size": 94,
+        "accuracy": 0.4468,
+        "precision": 0.4777,
+        "recall": 0.4468,
+        "f1": 0.4526
+    },
+    {
+        "fold": 4,
+        "train_size": 381,
+        "test_size": 94,
+        "accuracy": 0.5106,
+        "precision": 0.4912,
+        "recall": 0.5106,
+        "f1": 0.4912
+    },
+    {
+        "fold": 5,
+        "train_size": 475,
+        "test_size": 94,
+        "accuracy": 0.4894,
+        "precision": 0.5081,
+        "recall": 0.4894,
+        "f1": 0.4904
+    }
+]

@@ -198,12 +198,11 @@ LOGO_MAPPING = {
 
 # --- METADATA & UTILS ---
 MODEL_FEATURES = [
-    'Home_Elo', 'Away_Elo', 'Home_Att_Strength', 'Away_Att_Strength',
-    'Home_Def_Weakness', 'Away_Def_Weakness', 'Home_FIFA_Ova', 'Away_FIFA_Ova',
-    'Home_Market_Value', 'Away_Market_Value', 'Home_xG_Avg_L5', 'Away_xG_Avg_L5',
-    'Home_Streak_L5', 'Away_Streak_L5', 'Home_H2H_L3', 'Away_H2H_L3',
-    'Home_Pressure_Avg_L5', 'Away_Pressure_Avg_L5', 'Home_Goal_Diff_L5', 'Away_Goal_Diff_L5',
-    'Home_Rest_Days', 'Away_Rest_Days'
+    'Home_Elo', 'Away_Elo',
+    'Home_xG_Avg_L5', 'Away_xG_Avg_L5',
+    'Home_Streak_L5', 'Away_Streak_L5',
+    'Home_Pressure_Avg_L5', 'Away_Pressure_Avg_L5',
+    'Home_Dominance_Avg_L5', 'Away_Dominance_Avg_L5'
 ]
 
 def normalize_text_safe(text):

@@ -201,21 +201,30 @@ class ProFeatureEngine:
         self._h2h_features()
         return self.df
 
-def enrich_static_data(df, data_dir='data'):
+def enrich_static_data(df, data_dir=None):
     """Populates FIFA and Market Value using history + new static files."""
+    
+    # Resolve absolute data_dir if not provided
+    if data_dir is None:
+        # data is sibling to src (parent of this file is src)
+        src_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = os.path.dirname(src_dir) # LaLiga/
+        data_dir = os.path.join(base_dir, 'data')
     
     # Load History
     try:
         with open(os.path.join(data_dir, 'sofifa_history.json'), 'r', encoding='utf-8') as f: sofifa_hist = json.load(f)
         with open(os.path.join(data_dir, 'transfermarkt_history.json'), 'r', encoding='utf-8') as f: tm_hist = json.load(f)
-    except:
+    except Exception as e:
+        print(f"⚠️ Warning: Could not load history JSONs from {data_dir}: {e}")
         sofifa_hist, tm_hist = {}, {}
         
     # Load NEW 25/26 Data
     try:
         with open(os.path.join(data_dir, 'fifa_ratings_2526.json'), 'r', encoding='utf-8') as f: fifa_now = json.load(f)
         with open(os.path.join(data_dir, 'market_values_2526.json'), 'r', encoding='utf-8') as f: tm_now = json.load(f)
-    except:
+    except Exception as e:
+        print(f"⚠️ Warning: Could not load 25/26 JSONs from {data_dir}: {e}")
         fifa_now, tm_now = {}, {}
         
     home_fifa, away_fifa = [], []
@@ -231,39 +240,123 @@ def enrich_static_data(df, data_dir='data'):
             return float(clean)
         except: return 10.0
 
+    import unicodedata
+    def normalize_name(name):
+        """Remove accents and lowercase for robust matching."""
+        if not isinstance(name, str): return ""
+        # Remove accents
+        name = unicodedata.normalize('NFD', name)
+        name = "".join([c for c in name if unicodedata.category(c) != 'Mn'])
+        return name.lower().strip()
+
     def get_hist_val(team, year, dataset, key):
         if str(year) not in dataset: return None
-        # Simple substring match
+        team_norm = normalize_name(team)
+        # Simple substring match with normalization
         for item in dataset[str(year)]:
-            if team in item['team'] or item['team'] in team:
-                if key == 'ova': return int(item['ova'])
+            item_team_norm = normalize_name(item.get('team', ''))
+            if team_norm in item_team_norm or item_team_norm in team_norm:
+                if key == 'ova': return int(item.get('ova', 75))
                 if key == 'value': return parse_tm_val(item.get('value', '0'))
         return None
 
+    # Mapping SP1 (CSV) -> JSON Keys
+    NAME_MAP = {
+        'Alaves': 'Deportivo Alaves',
+        'Almeria': 'UD Almeria',
+        'Ath Bilbao': 'Athletic Club',
+        'Athletic Club': 'Athletic Bilbao',
+        'Atletico Madrid': 'Atletico de Madrid',
+        'Barcelona': 'FC Barcelona',
+        'Betis': 'Real Betis Balompie',
+        'Cadiz': 'Cadiz CF',
+        'Celta': 'RC Celta de Vigo',
+        'Celta Vigo': 'RC Celta de Vigo',
+        'Cordoba': 'Cordoba CF',
+        'Deportivo La Coruna': 'Deportivo de La Coruna',
+        'Eibar': 'SD Eibar',
+        'Elche': 'Elche CF',
+        'Espanol': 'RCD Espanyol',
+        'Getafe': 'Getafe CF',
+        'Girona': 'Girona FC',
+        'Granada': 'Granada CF',
+        'Hercules': 'Hercules CF',
+        'Huesca': 'SD Huesca',
+        'Las Palmas': 'UD Las Palmas',
+        'Leganes': 'CD Leganes',
+        'Levante': 'Levante UD',
+        'Lugo': 'CD Lugo',
+        'Malaga': 'Malaga CF',
+        'Mallorca': 'RCD Mallorca',
+        'Numancia': 'CD Numancia',
+        'Osasuna': 'CA Osasuna',
+        'Oviedo': 'Real Oviedo',
+        'Racing Santander': 'Racing Santander',
+        'Rayo Vallecano': 'Rayo Vallecano',
+        'Real Madrid': 'Real Madrid',
+        'Real Sociedad': 'Real Sociedad',
+        'Recreativo': 'Recreativo de Huelva',
+        'Sevilla': 'Sevilla FC',
+        'Sociedad': 'Real Sociedad',
+        'Sporting Gijon': 'Sporting de Gijon',
+        'Tenerife': 'CD Tenerife',
+        'Valencia': 'Valencia CF',
+        'Vallecano': 'Rayo Vallecano',
+        'Valladolid': 'Real Valladolid CF',
+        'Vigo': 'RC Celta de Vigo',
+        'Villarreal': 'Villarreal CF',
+        'Villarreal CF': 'Villarreal CF',
+        'Ath Madrid': 'Atletico de Madrid',
+        'Xerez': 'Xerez CD',
+        'Zaragoza': 'Real Zaragoza'
+    }
+
     for idx, row in df.iterrows():
-        season = row.get('Season', 2025) # Default to 25/26 if missing
-        h, a = row['HomeTeam'], row['AwayTeam']
+        season_val = row.get('Season', 2025) 
+        if pd.isna(season_val): season_val = 2025
+        season = int(season_val) # Ensure int for dictionary lookup
+        
+        h_raw, a_raw = row['HomeTeam'], row['AwayTeam']
+        
+        # Map to JSON keys
+        h = NAME_MAP.get(h_raw, h_raw)
+        a = NAME_MAP.get(a_raw, a_raw)
         
         h_ova, a_ova = 75, 75
         h_v, a_v = 10.0, 10.0
         
         # LOGIC: If Season >= 2025 (2025/26), use NEW JSON. Else Use HISTORY.
         if season >= 2025:
-            h_ova = fifa_now.get(h, 75)
-            a_ova = fifa_now.get(a, 75)
-            h_v = tm_now.get(h, 50.0)
-            a_v = tm_now.get(a, 50.0)
+            # Try mapped name first, then raw name
+            h_ova = fifa_now.get(h, fifa_now.get(h_raw, 75))
+            a_ova = fifa_now.get(a, fifa_now.get(a_raw, 75))
+            h_v = tm_now.get(h, tm_now.get(h_raw, 50.0))
+            a_v = tm_now.get(a, tm_now.get(a_raw, 50.0))
         else:
-            # Historical Lookup
-            ho = get_hist_val(h, season, sofifa_hist, 'ova')
-            if ho: h_ova = ho
-            ao = get_hist_val(a, season, sofifa_hist, 'ova')
-            if ao: a_ova = ao
-            
-            hv = get_hist_val(h, season, tm_hist, 'value')
-            if hv: h_v = hv
-            av = get_hist_val(a, season, tm_hist, 'value')
-            if av: a_v = av
+            # Historical Lookup with Temporal Fallback (+/- 1 year)
+            for s_check in [season, season-1, season+1]:
+                # Home FIFA
+                ho = get_hist_val(h, s_check, sofifa_hist, 'ova')
+                if not ho: ho = get_hist_val(h_raw, s_check, sofifa_hist, 'ova')
+                if ho: h_ova = ho
+                
+                # Away FIFA
+                ao = get_hist_val(a, s_check, sofifa_hist, 'ova')
+                if not ao: ao = get_hist_val(a_raw, s_check, sofifa_hist, 'ova')
+                if ao: a_ova = ao
+                
+                # Market Values
+                hv = get_hist_val(h, s_check, tm_hist, 'value')
+                if not hv: hv = get_hist_val(h_raw, s_check, tm_hist, 'value')
+                if hv: h_v = hv
+                
+                av = get_hist_val(a, s_check, tm_hist, 'value')
+                if not av: av = get_hist_val(a_raw, s_check, tm_hist, 'value')
+                if av: a_v = av
+
+                # If we found at least one check point for current team, break
+                if h_ova != 75 or a_ova != 75 or h_v != 10.0 or a_v != 10.0:
+                    break
             
         home_fifa.append(h_ova)
         away_fifa.append(a_ova)

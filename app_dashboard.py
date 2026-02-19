@@ -12,8 +12,6 @@ import sys
 import re
 
 # Ensure src is importable
-# Ensure src is importable
-# Ensure src is importable
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if not os.path.exists(os.path.join(BASE_DIR, 'src')):
     # Check if LaLiga subfolder exists directly (Correct path when running in TFG_REPOSITORIO)
@@ -25,8 +23,13 @@ if not os.path.exists(os.path.join(BASE_DIR, 'src')):
 sys.path.append(BASE_DIR)
 try:
     from src.feature_engineering import generate_features
-except ImportError:
-    pass # Handle gracefully if not needed for core display
+    from src.staking_system import calcular_stake_profesional
+    from src.staking_config import STAKING_CONFIG
+except ImportError as e:
+    st.error(f"Error cargando los módulos de LaLiga: {e}")
+    # Fallbacks si son necesarios
+    def calcular_stake_profesional(*args, **kwargs): return None
+    STAKING_CONFIG = {}
 
 # --- UTILS ---
 def clean_html(html):
@@ -201,9 +204,11 @@ LOGO_MAPPING = {
 
 # --- METADATA & UTILS ---
 MODEL_FEATURES = [
-    'Home_Elo', 'Away_Elo',
+    'Home_Elo', 'Away_Elo', 
+    'Home_FIFA_Ova', 'Away_FIFA_Ova',
+    'Home_Market_Value', 'Away_Market_Value', 
     'Home_xG_Avg_L5', 'Away_xG_Avg_L5',
-    'Home_Streak_L5', 'Away_Streak_L5',
+    'Home_Streak_L5', 'Away_Streak_L5', 
     'Home_Pressure_Avg_L5', 'Away_Pressure_Avg_L5',
     'Home_Dominance_Avg_L5', 'Away_Dominance_Avg_L5'
 ]
@@ -370,7 +375,7 @@ def render_header():
     with col1:
         st.markdown(clean_html("""
         <div style="display: flex; align-items: center; gap: 15px;">
-            <span style="font-size: 32px;">⚽</span>
+            <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">L</div>
             <div>
                 <h1 style="margin: 0; line-height: 1.2;">LALIGA <span style="font-weight: 300; opacity: 0.7;">ENTERPRISE</span></h1>
                 <p style="margin: 0; font-size: 12px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Big Data Analytics & Predictive Engine</p>
@@ -381,7 +386,7 @@ def render_header():
         st.markdown(clean_html(f"""
         <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; text-align: right;">
            <div style="font-size: 10px; opacity: 0.6; font-weight: 700;">SYSTEM STATUS</div>
-           <div style="color: #10b981; font-weight: 700; font-size: 12px;">● ONLINE</div>
+           <div style="color: #10b981; font-weight: 700; font-size: 12px;">ONLINE</div>
         </div>
         """), unsafe_allow_html=True)
     st.divider()
@@ -437,10 +442,22 @@ def main():
     with st.sidebar:
         st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/2048px-LaLiga_logo_2023.svg.png", width=100)
         st.markdown("### SETTINGS")
+        
+        # New Dynamic Bankroll Input
+        user_bankroll = st.sidebar.number_input(
+            "GESTION DE BANCA (€)", 
+            min_value=100.0, 
+            max_value=100000.0, 
+            value=float(STAKING_CONFIG.get('bankroll', 1000)),
+            step=100.0,
+            help="Define tu capital actual para ajustar los importes de apuesta automáticamente."
+        )
+        
         if st.button("Actualizar Datos"):
             with st.spinner("Descargando datos oficiales y recalculando métricas..."):
                 subprocess.run([sys.executable, os.path.join(BASE_DIR, "src", "update_system.py")])
-            st.success("¡Base de datos y cuotas actualizadas!")
+            st.cache_resource.clear()
+            st.success("Base de datos y cuotas actualizadas")
             st.rerun()
             
     tab1, tab2, tab3 = st.tabs(["LIVE MARKET", "TACTICAL SCOUTING", "HISTORICAL AUDIT"])
@@ -448,25 +465,36 @@ def main():
     with tab1:
         st.markdown(clean_html("""
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3b82f6;">
-            <strong style="color: #3b82f6;">📘 ABOUT THIS MODULE (MERCADO EN VIVO)</strong><br>
+            <strong style="color: #3b82f6;">ABOUT THIS MODULE (MERCADO EN VIVO)</strong><br>
             <span style="font-size: 13px; opacity: 0.8;">
             This section analyzes real-time odds from bookmakers (Winamax) and compares them against our AI model's probability.
-            <br>• <strong>EV (Expected Value)</strong>: Represents the theoretical profit margin. A Value > 0% (Green) suggests the odds are higher than the true probability.
+            <br>• <strong>EV (Expected Value)</strong>: Represents the theoretical profit margin. A Value > 0% suggests the odds are higher than the true probability.
             <br>• <strong>Kelly Criterion</strong>: Used to determine the optimal stake size based on the edge.
             </span>
         </div>
         """), unsafe_allow_html=True)
-        
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Live Matches", "10") # Mock
-        c2.metric("System ROI", "+8.2%")
-        c3.metric("Signal Strength", "High")
         
         matches = []
         if os.path.exists(ODDS_FILE):
             try: matches = json.load(open(ODDS_FILE))
             except: pass
             
+        c1, c2, c3 = st.columns(3)
+        num_matches = len(matches)
+        c1.metric("Live Matches", str(num_matches))
+        
+        # Real Validation Accuracy from metrics file if it exists
+        val_acc = "N/A"
+        if os.path.exists(METRICS_FILE):
+            try:
+                with open(METRICS_FILE, 'r') as f:
+                    m_data = json.load(f)
+                    val_acc = f"{sum(fold['accuracy'] for fold in m_data)/len(m_data):.1%}"
+            except: pass
+            
+        c2.metric("Validation Acc", val_acc)
+        c3.metric("Signal Strength", "High" if val_acc != "N/A" and float(val_acc.replace('%','')) > 50 else "Medium")
+
         if not matches:
              st.info("No live market data available.")
         
@@ -489,16 +517,94 @@ def main():
                 except: oh,od,oa=1,1,1
                 eh, ed, ea = (ph*oh)-1, (pd_prob*od)-1, (pa*oa)-1
 
-                # Value bet real si EV > 5% en alguna de las tres opciones
-                has_value_bet = any(ev > 0.05 for ev in (eh, ed, ea))
-                
-                with cols[i%2]:
-                    render_match_card(h_clean, a_clean, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, has_value_bet)
+                if ph is not None:
+                    # 1. Get Elo difference for viability check
+                    h_elo = df[df['HomeTeam'] == h_clean]['Home_Elo'].iloc[-1] if not df[df['HomeTeam'] == h_clean].empty else 1500
+                    a_elo = df[df['AwayTeam'] == a_clean]['Away_Elo'].iloc[-1] if not df[df['AwayTeam'] == a_clean].empty else 1500
+                    rank_diff = abs(h_elo - a_elo) / 100.0
+                    
+                    # 2. Process Staking
+                    st_results = {}
+                    p_map = {'1': ph, 'X': pd_prob, '2': pa}
+                    q_map = {'1': oh, 'X': od, '2': oa}
+                    
+                    for op in ['1', 'X', '2']:
+                         st_results[op] = calcular_stake_profesional(
+                             p_map[op], q_map[op], user_bankroll, rank_diff
+                         )
+                    
+                    # 3. Check for main value bet (EV > 5%)
+                    has_value_bet = any(ev > 0.05 for ev in (eh, ed, ea))
+                    
+                    with cols[i%2]:
+                        render_match_card(h_clean, a_clean, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, has_value_bet)
+                        
+                        # INTEGRATION: Professional Recommendation Table
+                        with st.expander("Auditoría de Valor y Staking Profesional"):
+                            st.markdown(f"**Análisis de Riesgo:** Diferencia Elo {rank_diff:.1f}")
+                            
+                            table_hd = """
+                            <table style="width:100%; font-size:12px; border-collapse: collapse; margin-top:10px;">
+                                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                                    <th style="padding:8px;">Opción</th>
+                                    <th style="padding:8px;">Cuota</th>
+                                    <th style="padding:8px;">p_model</th>
+                                    <th style="padding:8px;">Edge</th>
+                                    <th style="padding:8px;">Stake</th>
+                                    <th style="padding:8px;">Importe</th>
+                                    <th style="padding:8px;">Filtro</th>
+                                </tr>
+                            """
+                            rows = ""
+                            for op in ['1', 'X', '2']:
+                                p = p_map[op]
+                                o = q_map[op]
+                                res = st_results.get(op)
+                                
+                                if res and res.get('filtro_pasado'):
+                                    status_icon = "Viable"
+                                    edge_str = f"{res['edge_pct']:+.1f}%"
+                                    stake_str = f"{res['stake_scale']}/10"
+                                    imp_str = f"€{res['importe']}"
+                                    color = "#10b981"
+                                elif res:
+                                    status_icon = res['razon_rechazo']
+                                    edge_str = f"{res['edge_pct']:+.1f}%"
+                                    stake_str = "-"
+                                    imp_str = "-"
+                                    color = "rgba(255,255,255,0.4)"
+                                else:
+                                    status_icon = "Rechazada (Edge < 3%)"
+                                    edge_str = "-"
+                                    stake_str = "-"
+                                    imp_str = "-"
+                                    color = "rgba(255,255,255,0.4)"
+                                
+                                rows += f"""
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); color: {color};">
+                                    <td style="padding:8px; font-weight:bold;">{op}</td>
+                                    <td style="padding:8px;">{o:.2f}</td>
+                                    <td style="padding:8px;">{p:.1%}</td>
+                                    <td style="padding:8px;">{edge_str}</td>
+                                    <td style="padding:8px;">{stake_str}</td>
+                                    <td style="padding:8px;">{imp_str}</td>
+                                    <td style="padding:8px; font-size:10px;">{status_icon}</td>
+                                </tr>
+                                """
+                            
+                            st.markdown(clean_html(table_hd + rows + "</table>"), unsafe_allow_html=True)
+                            
+                            viables = [s for s in st_results.values() if s and s.get('filtro_pasado')]
+                            if viables:
+                                mejor = max(viables, key=lambda x: x['edge_pct'])
+                                st.success(f"**RECOMENDACIÓN:** Stake {mejor['stake_scale']}/10 ({mejor['importe']}€) | Edge: +{mejor['edge_pct']}%")
+                            else:
+                                st.info("No hay apuestas viables para este encuentro.")
 
     with tab2:
         st.markdown(clean_html("""
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #10b981;">
-            <strong style="color: #10b981;">📘 ABOUT THIS MODULE (SCOUTING TÁCTICO)</strong><br>
+            <strong style="color: #10b981;">ABOUT THIS MODULE (SCOUTING TÁCTICO)</strong><br>
             <span style="font-size: 13px; opacity: 0.8;">
             Comparative analysis engine using 6-Axis Radar Charts to visualize team strengths.
             <br>• <strong>Field Tilt</strong>: Measure of territorial dominance (Final Third Possession).
@@ -530,7 +636,7 @@ def main():
     with tab3:
         st.markdown(clean_html("""
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
-            <strong style="color: #f59e0b;">📘 ABOUT THIS MODULE (HISTORICAL AUDIT)</strong><br>
+            <strong style="color: #f59e0b;">ABOUT THIS MODULE (HISTORICAL AUDIT)</strong><br>
             <span style="font-size: 13px; opacity: 0.8;">
             Rigorous academic validation using <strong>TimeSeriesSplit (Expanding Window)</strong>.
             <br>• <strong>Methodology</strong>: The model is trained on past data and tested on future data (5 folds) to prevent look-ahead bias.
@@ -569,7 +675,7 @@ def main():
             fig.update_layout(**get_premium_plotly_layout("Accuracy Stability across Time Folds"))
             st.plotly_chart(fig, width="stretch")
         else:
-            st.warning("⚠️ Metrics file not found. Please run 'train_model.py' first.")
+            st.warning("Metrics file not found. Please run 'train_model.py' first.")
 
 def get_radar_data(df, team):
     """Calculates granular team metrics for radar chart based on last 10 matches."""
@@ -635,7 +741,7 @@ def get_radar_data(df, team):
 if __name__ == "__main__":
     st.set_page_config(
         page_title="LaLiga Enterprise | Analytics Engine",
-        page_icon="⚽",
+        page_icon="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/2048px-LaLiga_logo_2023.svg.png",
         layout="wide",
         initial_sidebar_state="expanded"
     )

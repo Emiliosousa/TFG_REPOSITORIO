@@ -380,6 +380,7 @@ def main():
         if st.button("Actualizar Datos"):
             with st.spinner("Descargando datos oficiales y recalculando métricas..."):
                 subprocess.run([sys.executable, os.path.join(BASE_DIR, "src", "update_system.py")])
+            st.cache_resource.clear()
             st.success("¡Base de datos y cuotas actualizadas!")
             st.rerun()
             

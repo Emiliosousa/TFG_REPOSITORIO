@@ -54,12 +54,13 @@ MODEL_FILE = os.path.join(SCRIPT_DIR, 'modelo_city_group.joblib')
 METRICS_FILE = os.path.join(SCRIPT_DIR, 'validation_metrics.json')
 
 MODEL_FEATURES = [
-    'Home_Elo', 'Away_Elo', 'Home_Att_Strength', 'Away_Att_Strength',
-    'Home_Def_Weakness', 'Away_Def_Weakness', 'Home_FIFA_Ova', 'Away_FIFA_Ova',
-    'Home_Market_Value', 'Away_Market_Value', 'Home_xG_Avg_L5', 'Away_xG_Avg_L5',
-    'Home_Streak_L5', 'Away_Streak_L5', 'Home_H2H_L3', 'Away_H2H_L3',
-    'Home_Pressure_Avg_L5', 'Away_Pressure_Avg_L5', 'Home_Goal_Diff_L5', 'Away_Goal_Diff_L5',
-    'Home_Rest_Days', 'Away_Rest_Days', 'Home_Dominance_Avg_L5', 'Away_Dominance_Avg_L5'
+    'Home_Elo', 'Away_Elo', 
+    'Home_FIFA_Ova', 'Away_FIFA_Ova',
+    'Home_Market_Value', 'Away_Market_Value', 
+    'Home_xG_Avg_L5', 'Away_xG_Avg_L5',
+    'Home_Streak_L5', 'Away_Streak_L5', 
+    'Home_Pressure_Avg_L5', 'Away_Pressure_Avg_L5',
+    'Home_Dominance_Avg_L5', 'Away_Dominance_Avg_L5'
 ]
 
 XGB_PARAMS = {
@@ -96,8 +97,14 @@ def main():
         print(f"Error: Missing features: {missing}")
         sys.exit(1)
         
-    X = df[MODEL_FEATURES]
-    y = df['FTR_Num']
+    # --- AUDIT MODE: EXCLUDE 2023/24 FROM FINAL TRAINING ---
+    # This prevents in-sample bias when auditing in Notebook 03
+    audit_season = 2023
+    print(f"AUDIT PROTECTION: Excluding Season {audit_season} from training set.")
+    df_train = df[df['Season'] != audit_season].copy()
+    
+    X = df_train[MODEL_FEATURES]
+    y = df_train['FTR_Num']
     
     print(f"\nMODEL TRAINING - TIME SERIES SPLIT (5 Folds)")
     print("="*50)

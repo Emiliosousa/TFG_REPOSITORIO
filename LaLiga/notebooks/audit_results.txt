@@ -1,0 +1,15 @@
+AUDITING LA LIGA 2025 DATA FOR LEAKAGE
+Loaded: df_final_app.csv
+2025 Records: 1592
+
+-- Direct Leakage Check --
+Raw xG Cols: ['Home_xG_Proxy', 'Away_xG_Proxy']
+⚠️ Cannot check direct match (missing raw xG column)
+
+-- Correlations in 2025 Subset (> 0.4) --
+Home_Elo: 0.4282
+Away_Elo: -0.4436
+B365A: 0.4569
+⚠️ Found 3 highly correlated features.
+
+Odds Range B365H: 1.14 to 15.0

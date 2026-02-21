@@ -136,8 +136,10 @@ h1, h2, h3, h4, h5, h6 {
     """), unsafe_allow_html=True)
 
 # --- CONSTANTS ---
-DATA_FILE = os.path.join(BASE_DIR, 'df_final_app.csv')
-MODEL_FILE = os.path.join(BASE_DIR, 'modelo_city_group.joblib')
+DATA_FILE = os.path.join(BASE_DIR, 'notebooks', 'df_final_clean.csv')
+MODEL_V2_FILE = os.path.join(BASE_DIR, 'modelo_city_group.joblib')          # Academic V2
+MODEL_V3_FILE = os.path.join(BASE_DIR, 'notebooks', 'modelo_v3_calibrado.joblib')  # V3
+MODEL_FILE = MODEL_V2_FILE  # legacy alias
 METRICS_FILE = os.path.join(BASE_DIR, 'validation_metrics.json')
 ODDS_FILE = os.path.join(BASE_DIR, 'data', 'live_odds.json')
 LOGOS_DIR = os.path.join(BASE_DIR, 'data', 'logos')
@@ -238,7 +240,23 @@ def get_premium_plotly_layout(title=""):
     return dict(template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(255,255,255,0.03)',
                 font=dict(family='Inter, sans-serif', color='#a0aec0', size=11), title=dict(text=title, font=dict(size=14, color='#fff')))
 
-def get_model_probs_for_match(df, model, home_team, away_team, raw_date=None):
+def get_features_from_model(model):
+    """Extract the feature list a model was trained on."""
+    try:
+        return model.get_booster().feature_names  # XGBoost
+    except AttributeError:
+        pass
+    try:
+        # CalibratedClassifier wrapping XGBoost
+        return model.calibrated_classifiers_[0].estimator.get_booster().feature_names
+    except Exception:
+        pass
+    try:
+        return list(model.feature_names_in_)  # sklearn estimators
+    except AttributeError:
+        return MODEL_FEATURES  # fallback
+
+def get_model_probs_for_match(df, model, home_team, away_team, raw_date=None, features=None):
     """
     Devuelve (P_H, P_D, P_A) para un partido concreto usando el modelo entrenado.
     - Intenta primero emparejar por fecha exacta (si raw_date viene de Winamax).
@@ -246,6 +264,11 @@ def get_model_probs_for_match(df, model, home_team, away_team, raw_date=None):
     """
     if df is None or model is None:
         return None
+
+    # Use model-specific features if provided, otherwise fall back to MODEL_FEATURES
+    feat_list = features if features is not None else MODEL_FEATURES
+    # NOTE: do NOT filter out features missing from df here.
+    # We keep all features and zero-fill missing ones so XGBoost gets the right input shape.
 
     subset = df[(df['HomeTeam'] == home_team) & (df['AwayTeam'] == away_team)].copy()
     if raw_date is not None and not subset.empty:
@@ -274,56 +297,31 @@ def get_model_probs_for_match(df, model, home_team, away_team, raw_date=None):
         a_row = a_last.iloc[0]
         
         # Create a synthetic row with model features
-        row = pd.Series(0, index=MODEL_FEATURES)
-        
+        row = pd.Series(0, index=feat_list)
+
         # Helper to get the correct stat based on whether team played home or away
         def get_stat(r, team, prefix):
             is_home = r['HomeTeam'] == team
             src = f"Home_{prefix}" if is_home else f"Away_{prefix}"
             return r.get(src, 0)
 
-        # Elo (Strength)
-        # Strength Ratings
-        row['Home_Elo'] = get_stat(h_row, home_team, 'Elo')
-        row['Away_Elo'] = get_stat(a_row, away_team, 'Elo')
-        row['Home_Att_Strength'] = get_stat(h_row, home_team, 'Att_Strength')
-        row['Away_Att_Strength'] = get_stat(a_row, away_team, 'Att_Strength')
-        row['Home_Def_Weakness'] = get_stat(h_row, home_team, 'Def_Weakness')
-        row['Away_Def_Weakness'] = get_stat(a_row, away_team, 'Def_Weakness')
-        
-        # Static Data
-        row['Home_FIFA_Ova'] = get_stat(h_row, home_team, 'FIFA_Ova')
-        row['Away_FIFA_Ova'] = get_stat(a_row, away_team, 'FIFA_Ova')
-        row['Home_Market_Value'] = get_stat(h_row, home_team, 'Market_Value')
-        row['Away_Market_Value'] = get_stat(a_row, away_team, 'Market_Value')
-        
-        # Recent Form
-        row['Home_xG_Avg_L5'] = get_stat(h_row, home_team, 'xG_Avg_L5')
-        row['Away_xG_Avg_L5'] = get_stat(a_row, away_team, 'xG_Avg_L5')
-        row['Home_Streak_L5'] = get_stat(h_row, home_team, 'Streak_L5')
-        row['Away_Streak_L5'] = get_stat(a_row, away_team, 'Streak_L5')
-        row['Home_H2H_L3'] = get_stat(h_row, home_team, 'H2H_L3')
-        row['Away_H2H_L3'] = get_stat(a_row, away_team, 'H2H_L3')
-        row['Home_Pressure_Avg_L5'] = get_stat(h_row, home_team, 'Pressure_Avg_L5')
-        row['Away_Pressure_Avg_L5'] = get_stat(a_row, away_team, 'Pressure_Avg_L5')
-        row['Home_Goal_Diff_L5'] = get_stat(h_row, home_team, 'Goal_Diff_L5')
-        row['Away_Goal_Diff_L5'] = get_stat(a_row, away_team, 'Goal_Diff_L5')
-        row['Home_Rest_Days'] = get_stat(h_row, home_team, 'Rest_Days')
-        row['Away_Rest_Days'] = get_stat(a_row, away_team, 'Rest_Days')
-        
-        # Dominance (Rolling)
-        row['Home_Dominance_Avg_L5'] = get_stat(h_row, home_team, 'Dominance_Avg_L5')
-        row['Away_Dominance_Avg_L5'] = get_stat(a_row, away_team, 'Dominance_Avg_L5')
+        # Fill in available features from the team's last game
+        for feat in feat_list:
+            if feat.startswith('Home_'):
+                suffix = feat[5:]
+                row[feat] = get_stat(h_row, home_team, suffix)
+            elif feat.startswith('Away_'):
+                suffix = feat[5:]
+                row[feat] = get_stat(a_row, away_team, suffix)
 
-        X = row[MODEL_FEATURES].to_frame().T
-        # Convert to numeric to avoid object dtype from mixed-type Row
+        X = pd.DataFrame([row.to_dict()])[feat_list]
         X = X.apply(pd.to_numeric, errors='coerce').fillna(0)
     else:
         # CASE A: Existing H2H or Future Match with pre-calculated features
         row = subset.sort_values('Date').iloc[-1]
         try:
-            X = row[MODEL_FEATURES].to_frame().T
-            # Convert to numeric to avoid object dtype from mixed-type Row
+            # Reindex to full feat_list, filling any missing columns with 0
+            X = row.to_frame().T.reindex(columns=feat_list, fill_value=0)
             X = X.apply(pd.to_numeric, errors='coerce').fillna(0)
         except (KeyError, Exception) as e:
             print(f"DEBUG: Error constructing X: {e}")
@@ -351,23 +349,50 @@ def load_resources():
         # Normalize Team Names
         df['HomeTeam'] = df['HomeTeam'].map(TEAM_MAPPING).fillna(df['HomeTeam'])
         df['AwayTeam'] = df['AwayTeam'].map(TEAM_MAPPING).fillna(df['AwayTeam'])
-        
-        for c in MODEL_FEATURES: 
-            if c in df.columns: df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
+
+        # --- Column aliases so V2 features match CSV column names ---
+        # FIFA detail ratings (CSV uses Title case, V2 was trained with UPPERCASE)
+        for side in ['Home', 'Away']:
+            for src, dst in [('FIFA_Att', 'FIFA_ATT'), ('FIFA_Mid', 'FIFA_MID'),
+                             ('FIFA_Def', 'FIFA_DEF'), ('FIFA_Ova', 'FIFA_OVR')]:
+                col_src = f'{side}_{src}'
+                col_dst = f'{side}_{dst}'
+                if col_src in df.columns and col_dst not in df.columns:
+                    df[col_dst] = df[col_src]
+            # TM_Value → Market_Value (best available proxy)
+            if f'{side}_Market_Value' in df.columns and f'{side}_TM_Value' not in df.columns:
+                df[f'{side}_TM_Value'] = df[f'{side}_Market_Value']
+            # TM_Avg_Age → approximate with a neutral constant (26 years is league avg)
+            if f'{side}_TM_Avg_Age' not in df.columns:
+                df[f'{side}_TM_Avg_Age'] = 26.0
+            # xG_Proxy → use PPDA_Proxy_L5 as closest available proxy
+            if f'{side}_xG_Proxy' not in df.columns:
+                ppda_col = f'{side}_PPDA_Proxy_L5'
+                df[f'{side}_xG_Proxy'] = df[ppda_col] if ppda_col in df.columns else 1.0
+        # B365 odds are already in the CSV as B365H, B365D, B365A
+
+        # Ensure numeric dtypes on all relevant columns
+        for c in df.columns:
+            if c not in ('HomeTeam', 'AwayTeam', 'Date', 'Div', 'Season', 'FTR'):
+                df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
+
     except Exception as e:
         df = None
     
-    model = None
-    if os.path.exists(MODEL_FILE):
+    def _load_model(path):
+        if not os.path.exists(path):
+            return None
         try:
-            artifact = joblib.load(MODEL_FILE)
+            artifact = joblib.load(path)
             if isinstance(artifact, dict) and 'model' in artifact:
-                model = artifact['model']
-            else:
-                model = artifact
+                return artifact['model']
+            return artifact
         except Exception:
-            model = None
-    return df, model
+            return None
+
+    model_v2 = _load_model(MODEL_V2_FILE)
+    model_v3 = _load_model(MODEL_V3_FILE)
+    return df, model_v2, model_v3
 
 # --- COMPONENTS ---
 def render_header():
@@ -391,43 +416,56 @@ def render_header():
         """), unsafe_allow_html=True)
     st.divider()
 
-def render_match_card(h, a, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, has_value_bet=False):
+def render_match_card(h, a, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, value_bets=None):
+    """Renders a match card. value_bets: set of options ('1','X','2') the model would bet on."""
+    if value_bets is None:
+        value_bets = set()
     l_h, l_a = get_team_logo(h), get_team_logo(a)
-    def c(ev): return "#10b981" if ev > 0.05 else ("#ef4444" if ev < -0.05 else "#f59e0b")
-    # Probabilidades implícitas de la casa (aprox. sin ajustar margen)
     implied_h = 1.0 / oh if oh > 0 else 0.0
     implied_d = 1.0 / od if od > 0 else 0.0
     implied_a = 1.0 / oa if oa > 0 else 0.0
-    
+
+    def ev_color(ev):
+        return "#10b981" if ev > 0.05 else ("#ef4444" if ev < -0.05 else "#f59e0b")
+
+    def opt_style(key):
+        if key in value_bets:
+            return "background:rgba(16,185,129,0.15);border:2px solid #10b981;box-shadow:0 0 10px rgba(16,185,129,0.4);"
+        return "background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.05);"
+
+    def opt_label(key, label):
+        return f"{label} 🎯" if key in value_bets else label
+
+    has_value = bool(value_bets)
+    outer_border = "2px solid #10b981" if has_value else "1px solid rgba(255,255,255,0.08)"
+    outer_shadow = "0 0 16px rgba(16,185,129,0.4)" if has_value else "0 4px 20px rgba(0,0,0,0.2)"
+
     with st.container(border=True):
-        # Flattened HTML to fix rendering
-        outer_border = "2px solid #10b981" if has_value_bet else "1px solid rgba(255,255,255,0.08)"
-        outer_shadow = "0 0 16px rgba(16,185,129,0.6)" if has_value_bet else "0 4px 20px rgba(0,0,0,0.2)"
         html = clean_html(f"""
-<div style="padding: 10px; border-radius: 6px; border: {outer_border}; box-shadow: {outer_shadow};">
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-<div style="display: flex; align-items: center; gap: 10px;"><img src="{l_h}" style="width: 40px; height: 40px; object-fit: contain;"><span style="font-weight: 700;">{h}</span></div>
-<div style="font-size: 12px; font-weight: 700; opacity: 0.5;">VS</div>
-<div style="display: flex; align-items: center; gap: 10px;"><span style="font-weight: 700;">{a}</span><img src="{l_a}" style="width: 40px; height: 40px; object-fit: contain;"></div>
+<div style="padding:10px;border-radius:6px;border:{outer_border};box-shadow:{outer_shadow};">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
+<div style="display:flex;align-items:center;gap:10px;"><img src="{l_h}" style="width:40px;height:40px;object-fit:contain;"><span style="font-weight:700;">{h}</span></div>
+<div style="font-size:12px;font-weight:700;opacity:0.5;">VS</div>
+<div style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;">{a}</span><img src="{l_a}" style="width:40px;height:40px;object-fit:contain;"></div>
 </div>
-<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-<div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; text-align: center; border: 1px solid rgba(255,255,255,0.05);">
-<div style="font-size: 10px; opacity: 0.6; font-weight: 700;">1</div>
-<div style="font-size: 16px; font-weight: 700;">{oh:.2f}</div>
-<div style="font-size: 10px; color: {c(eh)};">EV {eh:+.1%}</div>
-<div style="font-size: 9px; opacity: 0.65; color: #9CA3AF;">P modelo {ph:.0%} · P casa {implied_h:.0%}</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+<div style="padding:8px;border-radius:4px;text-align:center;{opt_style('1')}">
+<div style="font-size:10px;opacity:0.6;font-weight:700;">{opt_label('1','1')}</div>
+<div style="font-size:16px;font-weight:700;">{oh:.2f}</div>
+<div style="font-size:10px;color:{ev_color(eh)};">EV {eh:+.1%}</div>
+<div style="font-size:9px;opacity:0.65;color:#9CA3AF;">P modelo {ph:.0%} · P casa {implied_h:.0%}</div>
 </div>
-<div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; text-align: center; border: 1px solid rgba(255,255,255,0.05);">
-<div style="font-size: 10px; opacity: 0.6; font-weight: 700;">X</div>
-<div style="font-size: 16px; font-weight: 700;">{od:.2f}</div>
-<div style="font-size: 10px; color: {c(ed)};">EV {ed:+.1%}</div>
-<div style="font-size: 9px; opacity: 0.65; color: #9CA3AF;">P modelo {pd_prob:.0%} · P casa {implied_d:.0%}</div>
+<div style="padding:8px;border-radius:4px;text-align:center;{opt_style('X')}">
+<div style="font-size:10px;opacity:0.6;font-weight:700;">{opt_label('X','X')}</div>
+<div style="font-size:16px;font-weight:700;">{od:.2f}</div>
+<div style="font-size:10px;color:{ev_color(ed)};">EV {ed:+.1%}</div>
+<div style="font-size:9px;opacity:0.65;color:#9CA3AF;">P modelo {pd_prob:.0%} · P casa {implied_d:.0%}</div>
 </div>
-<div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; text-align: center; border: 1px solid rgba(255,255,255,0.05);">
-<div style="font-size: 10px; opacity: 0.6; font-weight: 700;">2</div>
-<div style="font-size: 16px; font-weight: 700;">{oa:.2f}</div>
-<div style="font-size: 10px; color: {c(ea)};">EV {ea:+.1%}</div>
-<div style="font-size: 9px; opacity: 0.65; color: #9CA3AF;">P modelo {pa:.0%} · P casa {implied_a:.0%}</div>
+<div style="padding:8px;border-radius:4px;text-align:center;{opt_style('2')}">
+<div style="font-size:10px;opacity:0.6;font-weight:700;">{opt_label('2','2')}</div>
+<div style="font-size:16px;font-weight:700;">{oa:.2f}</div>
+<div style="font-size:10px;color:{ev_color(ea)};">EV {ea:+.1%}</div>
+<div style="font-size:9px;opacity:0.65;color:#9CA3AF;">P modelo {pa:.0%} · P casa {implied_a:.0%}</div>
 </div>
 </div>
 </div>""")
@@ -437,7 +475,8 @@ def render_match_card(h, a, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, has_value_b
 def main():
     load_css()
     render_header()
-    df, model = load_resources()
+    df, model_v2, model_v3 = load_resources()
+    model = model_v2  # legacy alias for tabs that use a single model
     
     with st.sidebar:
         st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/2048px-LaLiga_logo_2023.svg.png", width=100)
@@ -479,10 +518,12 @@ def main():
             try: matches = json.load(open(ODDS_FILE))
             except: pass
             
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
         num_matches = len(matches)
         c1.metric("Live Matches", str(num_matches))
-        
+        c2.metric("Modelo V2", "✅ Cargado" if model_v2 else "❌ No encontrado")
+        c3.metric("Modelo V3", "✅ Cargado" if model_v3 else "❌ No encontrado")
+
         # Real Validation Accuracy from metrics file if it exists
         val_acc = "N/A"
         if os.path.exists(METRICS_FILE):
@@ -491,58 +532,71 @@ def main():
                     m_data = json.load(f)
                     val_acc = f"{sum(fold['accuracy'] for fold in m_data)/len(m_data):.1%}"
             except: pass
-            
-        c2.metric("Validation Acc", val_acc)
-        c3.metric("Signal Strength", "High" if val_acc != "N/A" and float(val_acc.replace('%','')) > 50 else "Medium")
+        c4.metric("Signal Strength", "High" if val_acc != "N/A" and float(val_acc.replace('%','')) > 50 else "Medium")
 
         if not matches:
              st.info("No live market data available.")
         
-        cols = st.columns(2)
-        if model is None or df is None:
-            st.warning("Modelo no cargado correctamente: no se pueden mostrar probabilidades reales (solo habría placeholders).")
+        if df is None:
+            st.warning("Datos no cargados correctamente.")
+        elif model_v2 is None and model_v3 is None:
+            st.warning("Ningún modelo cargado. Ejecuta los notebooks V2 y V3 para generar los modelos.")
         else:
-            for i, m in enumerate(matches):
-                h, a = m.get('home'), m.get('away')
-                h_clean = TEAM_MAPPING.get(normalize_text_safe(h), h)
-                a_clean = TEAM_MAPPING.get(normalize_text_safe(a), a)
-                
-                probs = get_model_probs_for_match(df, model, h_clean, a_clean, m.get('date'))
-                if probs is None:
-                    # Si no hay datos históricos suficientes para ese emparejamiento, lo omitimos
-                    continue
-                ph, pd_prob, pa = probs
-                    
-                try: oh, od, oa = float(m.get('1',1)), float(m.get('X',1)), float(m.get('2',1))
-                except: oh,od,oa=1,1,1
-                eh, ed, ea = (ph*oh)-1, (pd_prob*od)-1, (pa*oa)-1
+            def render_model_picks(active_model, model_label, label_color, min_ev=0.03):
+                """Renderiza los picks para un modelo dado en columnas de 2.
+                min_ev: umbral de EV exacto que usa el modelo para decidir apostar.
+                """
+                st.markdown(clean_html(f"""
+                <div style="background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 6px;
+                            border-left: 4px solid {label_color}; margin-bottom: 14px;">
+                    <strong style="color: {label_color}; font-size: 14px;">{model_label}</strong>
+                </div>
+                """), unsafe_allow_html=True)
 
-                if ph is not None:
-                    # 1. Get Elo difference for viability check
+                if active_model is None:
+                    st.warning(f"Modelo {model_label} no encontrado. Ejecuta el notebook correspondiente.")
+                    return
+
+                found_any = False
+                model_feats = get_features_from_model(active_model)
+                cols = st.columns(2)
+                col_idx = 0
+                for m in matches:
+                    h, a = m.get('home'), m.get('away')
+                    h_clean = TEAM_MAPPING.get(normalize_text_safe(h), h)
+                    a_clean = TEAM_MAPPING.get(normalize_text_safe(a), a)
+
+                    probs = get_model_probs_for_match(df, active_model, h_clean, a_clean, m.get('date'), features=model_feats)
+                    if probs is None:
+                        continue
+                    ph, pd_prob, pa = probs
+
+                    try: oh, od, oa = float(m.get('1',1)), float(m.get('X',1)), float(m.get('2',1))
+                    except: oh,od,oa=1,1,1
+                    eh, ed, ea = (ph*oh)-1, (pd_prob*od)-1, (pa*oa)-1
+
                     h_elo = df[df['HomeTeam'] == h_clean]['Home_Elo'].iloc[-1] if not df[df['HomeTeam'] == h_clean].empty else 1500
                     a_elo = df[df['AwayTeam'] == a_clean]['Away_Elo'].iloc[-1] if not df[df['AwayTeam'] == a_clean].empty else 1500
                     rank_diff = abs(h_elo - a_elo) / 100.0
-                    
-                    # 2. Process Staking
+
                     st_results = {}
                     p_map = {'1': ph, 'X': pd_prob, '2': pa}
                     q_map = {'1': oh, 'X': od, '2': oa}
-                    
                     for op in ['1', 'X', '2']:
-                         st_results[op] = calcular_stake_profesional(
-                             p_map[op], q_map[op], user_bankroll, rank_diff
-                         )
-                    
-                    # 3. Check for main value bet (EV > 5%)
-                    has_value_bet = any(ev > 0.05 for ev in (eh, ed, ea))
-                    
-                    with cols[i%2]:
-                        render_match_card(h_clean, a_clean, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, has_value_bet)
-                        
-                        # INTEGRATION: Professional Recommendation Table
+                        st_results[op] = calcular_stake_profesional(
+                            p_map[op], q_map[op], user_bankroll, rank_diff
+                        )
+
+                    # Highlight exactly what the model would bet on: EV > min_ev (umbral del notebook)
+                    ev_map = {'1': eh, 'X': ed, '2': ea}
+                    value_bets = {op for op, ev in ev_map.items() if ev > min_ev}
+                    found_any = True
+
+                    with cols[col_idx % 2]:
+                        render_match_card(h_clean, a_clean, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, value_bets)
+
                         with st.expander("Auditoría de Valor y Staking Profesional"):
                             st.markdown(f"**Análisis de Riesgo:** Diferencia Elo {rank_diff:.1f}")
-                            
                             table_hd = """
                             <table style="width:100%; font-size:12px; border-collapse: collapse; margin-top:10px;">
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
@@ -560,46 +614,34 @@ def main():
                                 p = p_map[op]
                                 o = q_map[op]
                                 res = st_results.get(op)
-                                
                                 if res and res.get('filtro_pasado'):
-                                    status_icon = "Viable"
-                                    edge_str = f"{res['edge_pct']:+.1f}%"
-                                    stake_str = f"{res['stake_scale']}/10"
-                                    imp_str = f"€{res['importe']}"
-                                    color = "#10b981"
+                                    status_icon, edge_str = "Viable", f"{res['edge_pct']:+.1f}%"
+                                    stake_str, imp_str, color = f"{res['stake_scale']}/10", f"€{res['importe']}", "#10b981"
                                 elif res:
-                                    status_icon = res['razon_rechazo']
-                                    edge_str = f"{res['edge_pct']:+.1f}%"
-                                    stake_str = "-"
-                                    imp_str = "-"
-                                    color = "rgba(255,255,255,0.4)"
+                                    status_icon, edge_str = res['razon_rechazo'], f"{res['edge_pct']:+.1f}%"
+                                    stake_str, imp_str, color = "-", "-", "rgba(255,255,255,0.4)"
                                 else:
-                                    status_icon = "Rechazada (Edge < 3%)"
-                                    edge_str = "-"
-                                    stake_str = "-"
-                                    imp_str = "-"
-                                    color = "rgba(255,255,255,0.4)"
-                                
-                                rows += f"""
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); color: {color};">
-                                    <td style="padding:8px; font-weight:bold;">{op}</td>
-                                    <td style="padding:8px;">{o:.2f}</td>
-                                    <td style="padding:8px;">{p:.1%}</td>
-                                    <td style="padding:8px;">{edge_str}</td>
-                                    <td style="padding:8px;">{stake_str}</td>
-                                    <td style="padding:8px;">{imp_str}</td>
-                                    <td style="padding:8px; font-size:10px;">{status_icon}</td>
-                                </tr>
-                                """
-                            
+                                    status_icon, edge_str = "Rechazada (Edge < 3%)", "-"
+                                    stake_str, imp_str, color = "-", "-", "rgba(255,255,255,0.4)"
+                                rows += f"""<tr style="border-bottom:1px solid rgba(255,255,255,0.05);color:{color};"><td style="padding:8px;font-weight:bold;">{op}</td><td style="padding:8px;">{o:.2f}</td><td style="padding:8px;">{p:.1%}</td><td style="padding:8px;">{edge_str}</td><td style="padding:8px;">{stake_str}</td><td style="padding:8px;">{imp_str}</td><td style="padding:8px;font-size:10px;">{status_icon}</td></tr>"""
                             st.markdown(clean_html(table_hd + rows + "</table>"), unsafe_allow_html=True)
-                            
                             viables = [s for s in st_results.values() if s and s.get('filtro_pasado')]
                             if viables:
                                 mejor = max(viables, key=lambda x: x['edge_pct'])
                                 st.success(f"**RECOMENDACIÓN:** Stake {mejor['stake_scale']}/10 ({mejor['importe']}€) | Edge: +{mejor['edge_pct']}%")
                             else:
                                 st.info("No hay apuestas viables para este encuentro.")
+                    col_idx += 1
+
+                if not found_any:
+                    st.info("No hay partidos disponibles para este modelo.")
+
+            # --- Render picks for V2 and V3 in separate sub-tabs ---
+            subtab_v2, subtab_v3 = st.tabs(["📊 Modelo V2 (Academic)", "🎯 Modelo V3"])
+            with subtab_v2:
+                render_model_picks(model_v2, "Modelo V2 — Academic XGBoost", "#3b82f6", min_ev=0.05)
+            with subtab_v3:
+                render_model_picks(model_v3, "Modelo V3 — Calibrado", "#10b981", min_ev=0.03)
 
     with tab2:
         st.markdown(clean_html("""
@@ -665,9 +707,12 @@ def main():
             c4.metric("Total Samples", f"{df_metrics['train_size'].max() + df_metrics['test_size'].max()}")
             
             st.markdown("#### Cross-Validation Results")
-            st.dataframe(df_metrics.style.format({
-                "accuracy": "{:.2%}", "precision": "{:.2%}", "recall": "{:.2%}", "f1": "{:.2%}"
-            }), width="stretch")
+            # Avoid pandas Styler (triggers matplotlib which is incompatible with NumPy 2.x)
+            df_display = df_metrics.copy()
+            for col in ["accuracy", "precision", "recall", "f1"]:
+                if col in df_display.columns:
+                    df_display[col] = df_display[col].apply(lambda x: f"{x:.2%}")
+            st.dataframe(df_display, use_container_width=True)
             
             fig = go.Figure()
             fig.add_trace(go.Bar(x=df_metrics['fold'], y=df_metrics['accuracy'], name='Accuracy', marker_color='#10b981'))

@@ -1,0 +1,124 @@
+
+--- SEASON 2017 ---
+1. FC Köln
+AC Milan
+AS Monaco
+AS Saint-Étienne
+Ajax
+Arsenal
+Athletic Club
+Atlético Madrid
+Bayer 04 Leverkusen
+Beşiktaş JK
+Borussia Dortmund
+Borussia Mönchengladbach
+Chelsea
+Crystal Palace
+Everton
+FC Barcelona
+FC Bayern München
+FC Porto
+FC Schalke 04
+Fenerbahçe SK
+Fiorentina
+Hertha BSC
+Inter
+Juventus
+Lazio
+Leicester City
+Liverpool
+Manchester City
+Manchester United
+Málaga CF
+Napoli
+OGC Nice
+Olympique Lyonnais
+Olympique de Marseille
+Paris Saint-Germain
+RC Celta
+RCD Espanyol
+Real Madrid
+Real Sociedad
+Roma
+SL Benfica
+SV Werder Bremen
+Sevilla FC
+Shakhtar Donetsk
+Southampton
+Spartak Moscow
+Sporting CP
+Stoke City
+Swansea City
+TSG 1899 Hoffenheim
+Torino
+Tottenham Hotspur
+UD Las Palmas
+Udinese
+Valencia CF
+VfL Wolfsburg
+Villarreal CF
+Watford
+West Ham United
+Zenit
+
+--- SEASON 2024 ---
+1. FC Union Berlin
+AC Milan
+AS Monaco
+Al Hilal
+Arsenal
+Aston Villa
+Atalanta
+Athletic Club
+Atlético Madrid
+Bayer 04 Leverkusen
+Borussia Dortmund
+Borussia Mönchengladbach
+Brentford
+Brighton & Hove Albion
+Chelsea
+Crystal Palace
+Eintracht Frankfurt
+Everton
+FC Barcelona
+FC Bayern München
+FC Porto
+Fenerbahçe SK
+Fiorentina
+Flamengo
+Fulham FC
+Galatasaray SK
+Getafe CF
+Girona FC
+Inter
+Juventus
+Lazio
+Lille OSC
+Liverpool
+Manchester City
+Manchester United
+Napoli
+Newcastle United
+Nottingham Forest
+OGC Nice
+Olympique Lyonnais
+Olympique de Marseille
+PSV
+Paris Saint-Germain
+RB Leipzig
+RC Lens
+Real Betis Balompié
+Real Madrid
+Real Sociedad
+Roma
+SC Freiburg
+SL Benfica
+Sevilla FC
+Sporting CP
+TSG 1899 Hoffenheim
+Torino
+Tottenham Hotspur
+VfB Stuttgart
+Villarreal CF
+West Ham United
+Wolverhampton Wanderers

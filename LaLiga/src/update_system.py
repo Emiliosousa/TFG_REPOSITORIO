@@ -56,6 +56,14 @@ def update_dataset():
         df_old = pd.read_csv(DATA_FILE)
         df_old['Date'] = pd.to_datetime(df_old['Date'])
         
+        # --- LEAKAGE FIX: STRIP ENGINEERED COLUMNS ---
+        # Only keep RAW match stats. This forces a clean rebuild of all features.
+        raw_cols = ['Div','Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','HS','AS','HST','AST','HF','AF','HC','AC','HY','AY','HR','AR','B365H','B365D','B365A','Season']
+        # Keep only columns that actually exist
+        keep_cols = [c for c in raw_cols if c in df_old.columns]
+        print(f"   -> Stripping engineered features. Keeping {len(keep_cols)} raw columns.")
+        df_old = df_old[keep_cols].copy()
+
         # --- USER REQUEST: REMOVE CURRENT SEASON (2025-2026) BEFORE MERGE ---
         # Assuming Season 25/26 starts after August 1st, 2025
         cutoff_date = datetime(2025, 8, 1)
@@ -106,10 +114,20 @@ def update_dataset():
     print("Running Feature Engineering Pipeline (v3.0)...")
     df_final = generate_features(df_combined)
     
-    # 5. Save
+    # 5. Save df_final_app.csv (legacy)
     print(f"Saving to {DATA_FILE}...")
     df_final.to_csv(DATA_FILE, index=False)
     print("Database updated successfully.")
+
+    # 5b. Also save df_final_clean.csv (used by dashboard & V3 model)
+    CLEAN_FILE = os.path.join(BASE_DIR, 'notebooks', 'df_final_clean.csv')
+    df_clean = df_final.copy()
+    # Add Target column (required for model retraining / backtest)
+    target_map = {'H': 2, 'D': 1, 'A': 0}
+    df_clean['Target'] = df_clean['FTR'].map(target_map)
+    df_clean.to_csv(CLEAN_FILE, index=False)
+    print(f"Also saved to {CLEAN_FILE} ({len(df_clean)} matches, latest: {df_clean['Date'].max()})")
+
     # --------------------------------------------------------------------------
     # 4. Run Scraper for Live Odds (Real scraping via Puppeteer + Python Processor)
     # --------------------------------------------------------------------------

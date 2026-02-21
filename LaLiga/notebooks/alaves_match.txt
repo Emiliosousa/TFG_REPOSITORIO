@@ -1,0 +1,9 @@
+Matches for 'Alaves':
+- Al Nassr
+- Blackburn Rovers
+- Juventus
+- Flamengo
+- Atalanta
+
+Searching for 'Depor':
+- RC Deportivo de La Coruña

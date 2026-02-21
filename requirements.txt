@@ -3,10 +3,7 @@ pandas
 numpy
 joblib
 plotly
-requests
-scikit-learn
 xgboost
-soccerdata
-ScraperFC
-lxml
-beautifulsoup4
+scikit-learn
+requests
+nbformat

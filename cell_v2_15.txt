@@ -1,0 +1,8 @@
+## 📊 Backtest: Simulación de Apuestas
+
+Validación financiera del modelo mediante simulación retrospectiva:
+- **Apuesta plana** (10u por apuesta) vs **Kelly Criterion** (stake proporcional al edge)
+- Solo se apuesta cuando **EV > 5%** (margen de seguridad)
+- Se utilizan cuotas históricas de Bet365 (`B365H`, `B365D`, `B365A`)
+
+> ⚠️ Este backtest usa el mismo dataset de entrenamiento (in-sample). Para una validación rigurosa out-of-sample, ver Notebook 03.

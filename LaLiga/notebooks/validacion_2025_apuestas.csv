@@ -1,0 +1,109 @@
+Date,Match,Bet,Odds_B365,Odds_Exchange,P_model,P_implied,Edge_Abs,Won,Flat_Profit,Bankroll,Month
+2025-01-11,Sevilla FC vs Valencia CF,H,4.0,3.66,0.563,0.273,0.29,False,-10.0,990.0,Jan
+2025-01-11,RCD Espanyol vs CD Leganes,H,4.0,3.66,0.472,0.273,0.199,False,-10.0,980.0,Jan
+2025-01-11,Real Valladolid CF vs Real Betis,A,4.5,4.12,0.417,0.243,0.174,False,-10.0,970.0,Jan
+2025-01-12,UD Las Palmas vs Getafe CF,H,3.3,3.02,0.645,0.331,0.314,False,-10.0,960.0,Jan
+2025-01-13,Real Sociedad vs Villarreal CF,H,4.0,3.66,0.445,0.273,0.173,True,26.64,986.64,Jan
+2025-01-17,RCD Espanyol vs Real Valladolid CF,H,5.25,4.81,0.377,0.208,0.169,True,38.08,1024.72,Jan
+2025-01-18,Girona FC vs Sevilla FC,H,4.0,3.66,0.586,0.273,0.313,False,-10.0,1014.72,Jan
+2025-01-18,Real Betis vs Alaves,H,4.75,4.35,0.626,0.23,0.396,False,-10.0,1004.72,Jan
+2025-01-18,Getafe CF vs FC Barcelona,A,6.5,5.95,0.515,0.168,0.347,False,-10.0,994.72,Jan
+2025-01-19,Celta Vigo vs Athletic Club,A,2.8,2.56,0.573,0.39,0.183,True,15.64,1010.36,Jan
+2025-01-20,Villarreal CF vs RCD Mallorca,H,5.25,4.81,0.524,0.208,0.316,True,38.08,1048.44,Jan
+2025-01-24,UD Las Palmas vs CA Osasuna,H,3.0,2.75,0.483,0.364,0.119,False,-10.0,1038.44,Jan
+2025-01-25,Sevilla FC vs RCD Espanyol,H,4.75,4.35,0.683,0.23,0.453,False,-10.0,1028.44,Jan
+2025-01-25,Ath Madrid vs Villarreal CF,H,4.75,4.35,0.66,0.23,0.43,False,-10.0,1018.44,Jan
+2025-01-26,Rayo Vallecano vs Girona FC,H,2.88,2.64,0.498,0.379,0.119,True,16.38,1034.82,Jan
+2025-01-26,Real Sociedad vs Getafe CF,H,5.5,5.04,0.547,0.199,0.348,False,-10.0,1024.82,Jan
+2025-01-27,Alaves vs Celta Vigo,H,3.0,2.75,0.49,0.364,0.126,False,-10.0,1014.8199999999999,Jan
+2025-02-01,Getafe CF vs Sevilla FC,H,3.25,2.98,0.45,0.336,0.114,False,-10.0,1004.8199999999999,Feb
+2025-02-02,Valencia CF vs Celta Vigo,H,3.25,2.98,0.474,0.336,0.138,True,19.77,1024.59,Feb
+2025-02-02,Real Betis vs Athletic Club,A,2.9,2.66,0.504,0.376,0.128,False,-10.0,1014.59,Feb
+2025-02-03,Girona FC vs UD Las Palmas,H,5.0,4.58,0.492,0.218,0.274,True,35.79,1050.38,Feb
+2025-02-08,Athletic Club vs Girona FC,H,5.0,4.58,0.811,0.218,0.592,True,35.79,1086.17,Feb
+2025-02-08,Real Madrid vs Ath Madrid,H,4.2,3.85,0.667,0.26,0.407,False,-10.0,1076.17,Feb
+2025-02-08,UD Las Palmas vs Villarreal CF,A,4.75,4.35,0.478,0.23,0.248,True,33.5,1109.67,Feb
+2025-02-09,Valencia CF vs CD Leganes,H,5.5,5.04,0.365,0.199,0.167,True,40.37,1150.04,Feb
+2025-02-09,Sevilla FC vs FC Barcelona,A,5.25,4.81,0.487,0.208,0.279,True,38.08,1188.12,Feb
+2025-02-09,Real Sociedad vs RCD Espanyol,H,5.75,5.27,0.414,0.19,0.224,True,42.66,1230.78,Feb
+2025-02-10,RCD Mallorca vs CA Osasuna,H,4.33,3.97,0.356,0.252,0.104,False,-10.0,1220.78,Feb
+2025-02-14,Girona FC vs Getafe CF,H,4.33,3.97,0.411,0.252,0.159,False,-10.0,1210.78,Feb
+2025-02-15,CA Osasuna vs Real Madrid,A,5.75,5.27,0.691,0.19,0.501,False,-10.0,1200.78,Feb
+2025-02-15,Villarreal CF vs Valencia CF,H,5.5,5.04,0.657,0.199,0.458,False,-10.0,1190.78,Feb
+2025-02-16,RCD Mallorca vs UD Las Palmas,H,5.25,4.81,0.453,0.208,0.246,True,38.08,1228.8600000000001,Feb
+2025-02-16,Real Valladolid CF vs Sevilla FC,A,4.0,3.66,0.409,0.273,0.136,True,26.64,1255.5,Feb
+2025-02-16,RCD Espanyol vs Athletic Club,A,5.5,5.04,0.582,0.199,0.383,False,-10.0,1245.5,Feb
+2025-02-21,Celta Vigo vs CA Osasuna,H,5.25,4.81,0.429,0.208,0.221,True,38.08,1283.58,Feb
+2025-02-22,Valencia CF vs Ath Madrid,A,4.2,3.85,0.396,0.26,0.136,True,28.47,1312.05,Feb
+2025-02-22,Alaves vs RCD Espanyol,H,5.25,4.81,0.382,0.208,0.174,False,-10.0,1302.05,Feb
+2025-02-23,Getafe CF vs Real Betis,H,2.9,2.66,0.526,0.376,0.149,False,-10.0,1292.05,Feb
+2025-02-24,Sevilla FC vs RCD Mallorca,H,3.9,3.57,0.544,0.28,0.264,False,-10.0,1282.05,Feb
+2025-03-01,Rayo Vallecano vs Sevilla FC,H,3.3,3.02,0.49,0.331,0.159,False,-10.0,1272.05,Mar
+2025-03-01,Real Betis vs Real Madrid,A,4.33,3.97,0.443,0.252,0.19,False,-10.0,1262.05,Mar
+2025-03-02,RCD Mallorca vs Alaves,H,3.5,3.21,0.474,0.312,0.162,False,-10.0,1252.05,Mar
+2025-03-09,Athletic Club vs RCD Mallorca,H,6.0,5.5,0.76,0.182,0.578,False,-10.0,1242.05,Mar
+2025-03-09,Getafe CF vs Ath Madrid,A,4.5,4.12,0.496,0.243,0.253,False,-10.0,1232.05,Mar
+2025-03-15,Real Valladolid CF vs Celta Vigo,A,5.0,4.58,0.379,0.218,0.161,True,35.79,1267.84,Mar
+2025-03-15,Villarreal CF vs Real Madrid,A,3.1,2.84,0.47,0.352,0.118,True,18.39,1286.23,Mar
+2025-03-15,Girona FC vs Valencia CF,H,3.9,3.57,0.42,0.28,0.14,False,-10.0,1276.23,Mar
+2025-03-15,RCD Mallorca vs RCD Espanyol,H,5.0,4.58,0.331,0.218,0.113,True,35.79,1312.02,Mar
+2025-03-16,Ath Madrid vs FC Barcelona,A,3.1,2.84,0.555,0.352,0.203,True,18.39,1330.4099999999999,Mar
+2025-03-16,CD Leganes vs Real Betis,A,3.8,3.48,0.558,0.287,0.271,True,24.8,1355.21,Mar
+2025-03-16,CA Osasuna vs Getafe CF,H,3.8,3.48,0.441,0.287,0.154,False,-10.0,1345.21,Mar
+2025-03-29,RCD Espanyol vs Ath Madrid,A,5.5,5.04,0.314,0.199,0.116,False,-10.0,1335.21,Mar
+2025-03-29,Alaves vs Rayo Vallecano,H,4.1,3.76,0.466,0.266,0.2,False,-10.0,1325.21,Mar
+2025-03-30,Valencia CF vs RCD Mallorca,H,3.75,3.43,0.478,0.291,0.187,True,24.35,1349.56,Mar
+2025-03-30,Real Betis vs Sevilla FC,H,4.33,3.97,0.755,0.252,0.503,True,29.66,1379.22,Mar
+2025-03-31,Celta Vigo vs UD Las Palmas,H,5.5,5.04,0.596,0.199,0.397,False,-10.0,1369.22,Mar
+2025-04-04,Rayo Vallecano vs RCD Espanyol,H,6.0,5.5,0.554,0.182,0.372,False,-10.0,1359.22,Apr
+2025-04-05,Girona FC vs Alaves,H,3.6,3.3,0.559,0.303,0.256,False,-10.0,1349.22,Apr
+2025-04-06,Real Valladolid CF vs Getafe CF,A,4.75,4.35,0.41,0.23,0.181,True,33.5,1382.72,Apr
+2025-04-06,Villarreal CF vs Athletic Club,H,3.25,2.98,0.478,0.336,0.142,False,-10.0,1372.72,Apr
+2025-04-11,Valencia CF vs Sevilla FC,H,3.4,3.11,0.668,0.321,0.347,True,21.14,1393.8600000000001,Apr
+2025-04-12,Real Sociedad vs RCD Mallorca,H,5.5,5.04,0.585,0.199,0.386,False,-10.0,1383.8600000000001,Apr
+2025-04-12,Celta Vigo vs RCD Espanyol,H,6.0,5.5,0.671,0.182,0.489,False,-10.0,1373.8600000000001,Apr
+2025-04-12,Getafe CF vs UD Las Palmas,H,5.5,5.04,0.631,0.199,0.433,False,-10.0,1363.8600000000001,Apr
+2025-04-13,CA Osasuna vs Girona FC,H,3.1,2.84,0.466,0.352,0.113,True,18.39,1382.25,Apr
+2025-04-13,Real Betis vs Villarreal CF,H,3.1,2.84,0.599,0.352,0.247,False,-10.0,1372.25,Apr
+2025-04-13,Alaves vs Real Madrid,A,5.25,4.81,0.601,0.208,0.393,True,38.08,1410.33,Apr
+2025-04-13,Athletic Club vs Rayo Vallecano,H,5.5,5.04,0.725,0.199,0.526,True,40.37,1450.7,Apr
+2025-04-18,RCD Espanyol vs Getafe CF,H,3.0,2.75,0.713,0.364,0.349,True,17.48,1468.18,Apr
+2025-04-19,UD Las Palmas vs Ath Madrid,A,5.75,5.27,0.512,0.19,0.323,False,-10.0,1458.18,Apr
+2025-04-19,RCD Mallorca vs CD Leganes,H,5.0,4.58,0.47,0.218,0.252,False,-10.0,1448.18,Apr
+2025-04-20,Villarreal CF vs Real Sociedad,H,5.0,4.58,0.593,0.218,0.374,False,-10.0,1438.18,Apr
+2025-04-20,Sevilla FC vs Alaves,H,4.2,3.85,0.509,0.26,0.249,False,-10.0,1428.18,Apr
+2025-04-20,Real Madrid vs Athletic Club,H,5.25,4.81,0.574,0.208,0.366,True,38.08,1466.26,Apr
+2025-04-20,Real Valladolid CF vs CA Osasuna,A,4.5,4.12,0.386,0.243,0.143,True,31.21,1497.47,Apr
+2025-04-21,Girona FC vs Real Betis,A,2.88,2.64,0.479,0.379,0.1,True,16.38,1513.85,Apr
+2025-04-22,Valencia CF vs RCD Espanyol,H,4.1,3.76,0.495,0.266,0.229,False,-10.0,1503.85,Apr
+2025-04-23,Getafe CF vs Real Madrid,A,4.75,4.35,0.646,0.23,0.416,True,33.5,1537.35,Apr
+2025-04-23,Celta Vigo vs Villarreal CF,A,2.5,2.29,0.55,0.437,0.114,False,-10.0,1527.35,Apr
+2025-04-24,Ath Madrid vs Rayo Vallecano,H,6.5,5.95,0.633,0.168,0.465,True,49.53,1576.88,Apr
+2025-04-24,CA Osasuna vs Sevilla FC,H,3.2,2.93,0.558,0.341,0.217,True,19.31,1596.19,Apr
+2025-04-27,Villarreal CF vs RCD Espanyol,H,6.25,5.72,0.387,0.175,0.213,True,47.24,1643.4299999999998,Apr
+2025-05-02,Rayo Vallecano vs Getafe CF,H,3.4,3.11,0.492,0.321,0.17,True,21.14,1664.57,May
+2025-05-03,Villarreal CF vs CA Osasuna,H,6.0,5.5,0.648,0.182,0.466,True,44.95,1709.52,May
+2025-05-04,Sevilla FC vs CD Leganes,H,4.75,4.35,0.598,0.23,0.368,False,-10.0,1699.52,May
+2025-05-05,Girona FC vs RCD Mallorca,H,4.2,3.85,0.507,0.26,0.247,True,28.47,1727.99,May
+2025-05-09,UD Las Palmas vs Rayo Vallecano,H,3.0,2.75,0.487,0.364,0.123,False,-10.0,1717.99,May
+2025-05-10,Ath Madrid vs Real Sociedad,H,5.0,4.58,0.526,0.218,0.307,True,35.79,1753.78,May
+2025-05-10,Celta Vigo vs Sevilla FC,H,4.5,4.12,0.643,0.243,0.4,True,31.21,1784.99,May
+2025-05-10,Valencia CF vs Getafe CF,H,4.33,3.97,0.824,0.252,0.572,True,29.66,1814.65,May
+2025-05-11,Real Betis vs CA Osasuna,H,5.75,5.27,0.806,0.19,0.617,False,-10.0,1804.65,May
+2025-05-11,Athletic Club vs Alaves,H,4.5,4.12,0.609,0.243,0.366,True,31.21,1835.8600000000001,May
+2025-05-13,Sevilla FC vs UD Las Palmas,H,5.25,4.81,0.591,0.208,0.383,True,38.08,1873.94,May
+2025-05-15,Rayo Vallecano vs Real Betis,A,3.0,2.75,0.482,0.364,0.118,False,-10.0,1863.94,May
+2025-05-15,Getafe CF vs Athletic Club,A,3.2,2.93,0.555,0.341,0.214,True,19.31,1883.25,May
+2025-05-18,RCD Mallorca vs Getafe CF,H,4.2,3.85,0.451,0.26,0.191,False,-10.0,1873.25,May
+2025-05-18,Real Valladolid CF vs Alaves,A,6.0,5.5,0.34,0.182,0.158,True,44.95,1918.2,May
+2025-05-18,Real Sociedad vs Girona FC,H,4.1,3.76,0.536,0.266,0.27,True,27.55,1945.75,May
+2025-05-18,Sevilla FC vs Real Madrid,A,4.2,3.85,0.656,0.26,0.396,True,28.47,1974.22,May
+2025-05-18,CA Osasuna vs RCD Espanyol,H,4.75,4.35,0.702,0.23,0.472,True,33.5,2007.72,May
+2025-05-18,FC Barcelona vs Villarreal CF,H,3.75,3.43,0.547,0.291,0.256,False,-10.0,1997.72,May
+2025-05-18,Celta Vigo vs Rayo Vallecano,H,4.33,3.97,0.566,0.252,0.313,False,-10.0,1987.72,May
+2025-05-23,Real Betis vs Valencia CF,H,3.75,3.43,0.53,0.291,0.239,False,-10.0,1977.72,May
+2025-05-24,Rayo Vallecano vs RCD Mallorca,H,6.25,5.72,0.713,0.175,0.538,False,-10.0,1967.72,May
+2025-05-24,Getafe CF vs Celta Vigo,A,4.1,3.76,0.376,0.266,0.109,True,27.55,1995.27,May
+2025-05-24,Real Madrid vs Real Sociedad,H,6.5,5.95,0.76,0.168,0.592,True,49.53,2044.8,May
+2025-05-25,Villarreal CF vs Sevilla FC,H,6.0,5.5,0.799,0.182,0.617,True,44.95,2089.75,May
+2025-05-25,Girona FC vs Ath Madrid,A,3.8,3.48,0.448,0.287,0.161,True,24.8,2114.55,May

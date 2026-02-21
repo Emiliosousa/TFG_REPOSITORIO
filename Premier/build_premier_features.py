@@ -49,8 +49,11 @@ def main():
                 continue
 
             shot_cols = ['HS', 'AS', 'HST', 'AST']
+            odds_cols = ['B365H', 'B365D', 'B365A']
             available_shot_cols = [c for c in shot_cols if c in df.columns]
-            df = df[base_cols + available_shot_cols].dropna(subset=base_cols)
+            available_odds_cols = [c for c in odds_cols if c in df.columns]
+            
+            df = df[base_cols + available_shot_cols + available_odds_cols].dropna(subset=base_cols)
 
             # Extract season from filename (E0-2024-25.csv -> 2024)
             basename = os.path.basename(f)
@@ -74,7 +77,7 @@ def main():
     df['AwayTeam'] = df['AwayTeam'].apply(normalize_name)
 
     # Ensure numeric
-    for c in ['FTHG', 'FTAG', 'HS', 'AS', 'HST', 'AST']:
+    for c in ['FTHG', 'FTAG', 'HS', 'AS', 'HST', 'AST', 'B365H', 'B365D', 'B365A']:
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
 
@@ -201,7 +204,8 @@ def main():
         'Home_xG_Avg_L5', 'Away_xG_Avg_L5',
         'Home_Streak_L5', 'Away_Streak_L5',
         'Home_Pressure_Avg_L5', 'Away_Pressure_Avg_L5',
-        'Home_Dominance', 'Away_Dominance'
+        'Home_Dominance', 'Away_Dominance',
+        'B365H', 'B365D', 'B365A'
     ]
 
     df_export = df[export_cols].copy()

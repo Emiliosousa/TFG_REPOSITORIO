@@ -1,0 +1,106 @@
+import nbformat
+import os
+
+NOTEBOOK_PATH = r"c:\Users\emili\OneDrive\Escritorio\US SEVILLA\winamax-odds-detector\TFG_REPOSITORIO\LaLiga\notebooks\02_Modelado_Avanzado_Academic_v2.ipynb"
+
+# Code to be injected after data loading/enrichment but BEFORE splitting/training
+CLEANING_CODE = r"""
+# --- [INJECTED] STRICT DATA CLEANING (REAL DATA ONLY) ---
+print("\n🔍 STARTING STRICT DATA CLEANING...")
+initial_rows = len(df)
+
+# 1. Update Mapping for Transfermarkt (Fix Alaves)
+# Note: Alaves is missing in FIFA history but present in TM as 'Deportivo Alavés'
+# We map it here so at least TM data is correct, though rows might be dropped if FIFA is missing.
+team_map = {
+    'Alaves': 'Deportivo Alavés',
+    'Ath Bilbao': 'Athletic Club',
+    'Atl. Madrid': 'Atlético Madrid',
+    'Betis': 'Real Betis Balompié',
+    'Celta Vigo': 'RC Celta',
+    'Dep. La Coruna': 'RC Deportivo de La Coruña',
+    'Espanyol': 'RCD Espanyol',
+    'Gijon': 'Sporting Gijón',
+    'Granada': 'Granada CF',
+    'La Coruna': 'RC Deportivo de La Coruña',
+    'Las Palmas': 'UD Las Palmas',
+    'Leganes': 'CD Leganés',
+    'Levante': 'Levante UD',
+    'Malaga': 'Málaga CF',
+    'Mallorca': 'RCD Mallorca',
+    'Osasuna': 'CA Osasuna',
+    'Racing Santander': 'Racing Santander', # Verify
+    'Rayo Vallecano': 'Rayo Vallecano',
+    'Real Sociedad': 'Real Sociedad',
+    'Sevilla': 'Sevilla FC',
+    'Sp. Gijon': 'Sporting Gijón',
+    'Valencia': 'Valencia CF',
+    'Valladolid': 'Real Valladolid CF',
+    'Villarreal': 'Villarreal CF',
+    'Zaragoza': 'Real Zaragoza'
+}
+
+# Apply manual map fix for TM matching if not already applied
+# Rerun enrichment logic if needed or just patch the dataframe if columns exist with NaNs?
+# The enrichment logic (Cell 3/4 usually) uses fuzzy matching.
+# Here we enforce the check.
+
+cols_to_check = ['Home_FIFA_OVR', 'Away_FIFA_OVR', 'Home_TM_Value', 'Away_TM_Value']
+missing_mask = df[cols_to_check].isnull().any(axis=1) | (df[cols_to_check] == 0).any(axis=1)
+
+rows_to_drop = missing_mask.sum()
+print(f"⚠️ Found {rows_to_drop} rows with missing or zero-filled data in FIFA/TM columns.")
+
+if rows_to_drop > 0:
+    print("🧹 DROPPING incomplete rows to enforce 'REAL DATA ONLY' policy...")
+    df = df[~missing_mask].copy()
+    print(f"✅ Dropped {rows_to_drop} rows. New shape: {df.shape}")
+else:
+    print("✅ No missing data found. Dataset is clean.")
+
+# Re-assign to global X, y, season_series
+features = [c for c in df.columns if c not in ['Date', 'HomeTeam', 'AwayTeam', 'FTR', 'Season', 'Target']] # Update features list if needed
+X = df[features]
+y = df['Target']
+season_series = df['Season']
+df_final = df
+# -------------------------------------------------------------
+"""
+
+def patch_notebook():
+    if not os.path.exists(NOTEBOOK_PATH):
+        print(f"Notebook not found: {NOTEBOOK_PATH}")
+        return
+
+    nb = nbformat.read(NOTEBOOK_PATH, as_version=4)
+    
+    # Locate where to insert. Ideally after the enrichment cells.
+    # We look for where 'df' is finally prepared or before splitting.
+    # Searching for "Train/Test Split" or similar marker.
+    
+    insert_idx = -1
+    for i, cell in enumerate(nb.cells):
+        if cell.cell_type == 'code' and "TimeSeriesSplit" in cell.source:
+            insert_idx = i
+            break
+            
+    if insert_idx == -1:
+        # Fallback: Look for "X ="
+        for i, cell in enumerate(nb.cells):
+            if cell.cell_type == 'code' and "X =" in cell.source:
+                insert_idx = i
+                break
+    
+    if insert_idx != -1:
+        new_cell = nbformat.v4.new_code_cell(CLEANING_CODE)
+        nb.cells.insert(insert_idx, new_cell)
+        print(f"Inserted CLEANING code at cell {insert_idx}")
+    else:
+        print("Could not find insertion point. Appending to end (might be too late).")
+        nb.cells.append(nbformat.v4.new_code_cell(CLEANING_CODE))
+
+    nbformat.write(nb, NOTEBOOK_PATH)
+    print("Notebook patched successfully.")
+
+if __name__ == "__main__":
+    patch_notebook()

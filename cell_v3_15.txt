@@ -1,0 +1,61 @@
+fig, axes = plt.subplots(2, 2, figsize=(16, 10))
+fig.suptitle('LaLiga Prediction Model — Investor Report', fontsize=16, fontweight='bold', y=1.01)
+
+# --- 1. Bankroll acumulado ---
+ax1 = axes[0, 0]
+ax1.plot(df_bets_sorted.index, df_bets_sorted['Flat_Bankroll'],
+         color=COLORS['blue'], linewidth=1.5, label=f'Flat Staking (ROI: {flat_roi_g:+.1%})')
+ax1.plot(df_bets_sorted.index, df_bets_sorted['Kelly_Bankroll'],
+         color=COLORS['green'], linewidth=1.5, label=f'Kelly 1/4 (ROI: {kelly_roi_g:+.1%})')
+ax1.axhline(INITIAL_BANKROLL, color=COLORS['red'], linestyle='--', linewidth=1, label='Break Even')
+ax1.fill_between(df_bets_sorted.index, INITIAL_BANKROLL,
+                 df_bets_sorted['Flat_Bankroll'],
+                 where=df_bets_sorted['Flat_Bankroll'] >= INITIAL_BANKROLL,
+                 alpha=0.15, color=COLORS['green'])
+ax1.fill_between(df_bets_sorted.index, INITIAL_BANKROLL,
+                 df_bets_sorted['Flat_Bankroll'],
+                 where=df_bets_sorted['Flat_Bankroll'] < INITIAL_BANKROLL,
+                 alpha=0.15, color=COLORS['red'])
+ax1.set_title('Evolución del Bankroll (Total)', fontweight='bold')
+ax1.set_xlabel('Nº Apuesta')
+ax1.set_ylabel('Bankroll (€)')
+ax1.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'€{x:,.0f}'))
+ax1.legend(fontsize=8)
+
+# --- 2. ROI por temporada ---
+ax2 = axes[0, 1]
+colors_bar = [COLORS['green'] if r > 0 else COLORS['red'] for r in df_seasons['Flat_ROI']]
+bars = ax2.bar(df_seasons['Season'].astype(str), df_seasons['Flat_ROI'] * 100,
+               color=colors_bar, edgecolor='white', linewidth=0.5)
+ax2.axhline(0, color='black', linewidth=0.8)
+ax2.set_title('ROI por Temporada (Flat Staking)', fontweight='bold')
+ax2.set_xlabel('Temporada')
+ax2.set_ylabel('ROI (%)')
+ax2.tick_params(axis='x', rotation=45)
+for bar, val in zip(bars, df_seasons['Flat_ROI']):
+    ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.3,
+             f'{val:+.1%}', ha='center', va='bottom', fontsize=7, fontweight='bold')
+
+# --- 3. Drawdown ---
+ax3 = axes[1, 0]
+ax3.fill_between(df_bets_sorted.index, drawdown_flat * 100, 0,
+                 alpha=0.6, color=COLORS['red'], label=f'Max DD: {max_dd_flat:.1%}')
+ax3.set_title('Drawdown (Flat Staking)', fontweight='bold')
+ax3.set_xlabel('Nº Apuesta')
+ax3.set_ylabel('Drawdown (%)')
+ax3.legend(fontsize=9)
+
+# --- 4. Distribución de EV de apuestas realizadas ---
+ax4 = axes[1, 1]
+ax4.hist(df_bets_sorted['EV'] * 100, bins=30, color=COLORS['blue'], edgecolor='white', alpha=0.8)
+ax4.axvline((df_bets_sorted['EV'] * 100).mean(), color=COLORS['orange'],
+            linewidth=2, linestyle='--', label=f'EV medio: {df_bets_sorted["EV"].mean():+.1%}')
+ax4.set_title('Distribución de Expected Value (apuestas seleccionadas)', fontweight='bold')
+ax4.set_xlabel('EV (%)')
+ax4.set_ylabel('Frecuencia')
+ax4.legend(fontsize=9)
+
+plt.tight_layout()
+plt.savefig('investor_report_charts.png', dpi=150, bbox_inches='tight')
+plt.show()
+print('✅ Gráfico guardado: investor_report_charts.png')

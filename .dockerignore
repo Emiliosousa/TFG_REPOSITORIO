@@ -1,0 +1,12 @@
+__pycache__/
+.git/
+node_modules/
+.venv/
+.env
+*.log
+.DS_Store
+*.ipynb_checkpoints/
+LaLiga/state_dump.json
+LaLiga/data/live_odds.json
+LaLiga/data/SP1_latest.csv
+C:/Users/emili/

@@ -396,18 +396,18 @@ def render_header():
         <img src="https://upload.wikimedia.org/wikipedia/en/thumb/f/f2/Premier_League_Logo.svg/1200px-Premier_League_Logo.svg.png" width="120" style="margin-bottom: 8px; filter: drop-shadow(0 0 20px rgba(255, 40, 130, 0.4));">
         <h1 style="margin: 4px 0 0 0; font-size: 26px !important;">ANALYTICS ENGINE</h1>
         <p style="font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin: 4px 0 0 0;">
-            POWERED BY EA SPORTS FC™ | SEASON 2024/25
+            POWERED BY EA SPORTS FC | SEASON 2024/25
         </p>
     </div>
     <div class="sponsor-bar">
         <span class="sponsor-item">BARCLAYS</span>
-        <span class="sponsor-item">•</span>
+        <span class="sponsor-item">|</span>
         <span class="sponsor-item">NIKE</span>
-        <span class="sponsor-item">•</span>
+        <span class="sponsor-item">|</span>
         <span class="sponsor-item">EA SPORTS FC</span>
-        <span class="sponsor-item">•</span>
+        <span class="sponsor-item">|</span>
         <span class="sponsor-item">ORACLE</span>
-        <span class="sponsor-item">•</span>
+        <span class="sponsor-item">|</span>
         <span class="sponsor-item">HUBLOT</span>
     </div>
     """), unsafe_allow_html=True)
@@ -424,7 +424,7 @@ def render_match_card(h, a, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, has_value=F
     html_content = clean_html(f"""
         <div class="pl-card">
             <div class="pl-card-header">
-                <div style="font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 2px; text-transform: uppercase;">Premier League • Matchday</div>
+                <div style="font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 2px; text-transform: uppercase;">Premier League | Matchday</div>
                 {vb}
             </div>
             <div class="pl-teams">
@@ -623,7 +623,7 @@ def main():
                     name='Elo'
                 ))
                 fig_elo.update_layout(
-                    title=dict(text=f"{team} — Elo Rating Evolution", font=dict(size=14, color='white')),
+                    title=dict(text=f"{team} - Elo Rating Evolution", font=dict(size=14, color='white')),
                     paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white', family='Inter'),
                     xaxis=dict(gridcolor='rgba(255,255,255,0.05)'),
@@ -652,7 +652,7 @@ def main():
                     textfont=dict(size=12, color='white')
                 ))
                 fig_pie.update_layout(
-                    title=dict(text=f"{team} — Result Distribution (All Time)", font=dict(size=14, color='white')),
+                    title=dict(text=f"{team} - Result Distribution (All Time)", font=dict(size=14, color='white')),
                     paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color='white', family='Inter'),
                     height=350, margin=dict(l=20, r=20, t=50, b=20),
@@ -664,7 +664,7 @@ def main():
     st.markdown(clean_html("""
     <div style="text-align: center; padding: 30px 0 10px 0; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.05);">
         <p style="font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.15);">
-            Premier League Analytics Engine™ v3.0 | © 2025 Valbrix Intelligence
+            Premier League Analytics Engine v3.0 | 2025 Valbrix Intelligence
         </p>
         <p style="font-size: 9px; color: rgba(255,255,255,0.1);">
             Powered by XGBoost + Optuna | Data: football-data.co.uk

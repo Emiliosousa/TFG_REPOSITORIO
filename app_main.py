@@ -5,7 +5,7 @@ import base64
 # --- PAGE CONFIG ---
 st.set_page_config(
     page_title="US x Winamax | Research Hub",
-    page_icon="🎓",
+    page_icon="US",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -260,7 +260,7 @@ def render_landing():
         </div>
         <div class="header-title-group">
             <div class="dept-title">Escuela Técnica Superior de<br>Ingeniería Informática</div>
-            <div class="project-title">Trabajo de Fin de Grado • Curso 2024/25</div>
+            <div class="project-title">Trabajo de Fin de Grado | Curso 2024/25</div>
         </div>
     </div>
     
@@ -319,7 +319,7 @@ def render_landing():
     # FOOTER
     st.markdown("""
     <div class="footer-section">
-        <strong>Universidad de Sevilla</strong> © 2025 • Escuela Técnica Superior de Ingeniería Informática (ETSII)<br>
+        <strong>Universidad de Sevilla</strong> 2025 | Escuela Técnica Superior de Ingeniería Informática (ETSII)<br>
         <em>Grado en Ingeniería Informática - Tecnologías Informáticas</em>
     </div>
     """, unsafe_allow_html=True)
@@ -329,7 +329,7 @@ if st.session_state['current_app'] == 'premier':
     import app_premier
     with st.sidebar:
         st.markdown("---")
-        if st.button("⬅ RETURN TO HUB"):
+        if st.button("RETURN TO HUB"):
             go_home()
     app_premier.main()
 
@@ -337,7 +337,7 @@ elif st.session_state['current_app'] == 'laliga':
     import app_dashboard
     with st.sidebar:
         st.markdown("---")
-        if st.button("⬅ RETURN TO HUB"):
+        if st.button("RETURN TO HUB"):
             go_home()
     app_dashboard.main()
 

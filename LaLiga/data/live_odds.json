@@ -1,92 +1,92 @@
 [
   {
-    "home": "Atl\u00e9tico Madrid",
-    "away": "Espanyol",
-    "1": 1.43,
-    "X": 4.7,
-    "2": 6.75,
-    "date": 1771704000,
-    "tournament": 36
-  },
-  {
-    "home": "Getafe",
-    "away": "Sevilla FC",
-    "1": 2.4,
-    "X": 2.95,
-    "2": 3.25,
-    "date": 1771765200,
-    "tournament": 36
-  },
-  {
-    "home": "FC Barcelona",
-    "away": "Levante",
-    "1": 1.1,
-    "X": 12,
-    "2": 16,
-    "date": 1771773300,
-    "tournament": 36
-  },
-  {
-    "home": "Celta Vigo",
-    "away": "RCD Mallorca",
-    "1": 1.9,
-    "X": 3.45,
-    "2": 4.2,
-    "date": 1771781400,
-    "tournament": 36
-  },
-  {
-    "home": "Villarreal",
-    "away": "Valencia",
-    "1": 1.7,
-    "X": 4.1,
-    "2": 4.5,
-    "date": 1771790400,
-    "tournament": 36
-  },
-  {
-    "home": "Alav\u00e9s",
-    "away": "Girona",
-    "1": 2.3,
-    "X": 3,
-    "2": 3.35,
-    "date": 1771876800,
-    "tournament": 36
-  },
-  {
     "home": "Levante",
     "away": "Alav\u00e9s",
     "1": 2.55,
-    "X": 3.1,
-    "2": 2.65,
+    "X": 3.2,
+    "2": 2.8,
     "date": 1772222400,
     "tournament": 36
   },
   {
     "home": "Rayo Vallecano",
     "away": "Athletic Bilbao",
-    "1": 2.5,
-    "X": 3,
-    "2": 2.8,
+    "1": 2.45,
+    "X": 3.15,
+    "2": 3,
     "date": 1772283600,
     "tournament": 36
   },
   {
     "home": "FC Barcelona",
     "away": "Villarreal",
-    "1": 1.27,
-    "X": 6.25,
-    "2": 7.25,
+    "1": 1.29,
+    "X": 7.25,
+    "2": 7,
     "date": 1772291700,
     "tournament": 36
   },
   {
     "home": "RCD Mallorca",
     "away": "Real Sociedad",
-    "1": 2.8,
-    "X": 3.3,
-    "2": 2.3,
+    "1": 2.85,
+    "X": 3.25,
+    "2": 2.5,
     "date": 1772299800,
+    "tournament": 36
+  },
+  {
+    "home": "Real Oviedo",
+    "away": "Atl\u00e9tico Madrid",
+    "1": 5.2,
+    "X": 3.7,
+    "2": 1.68,
+    "date": 1772308800,
+    "tournament": 36
+  },
+  {
+    "home": "Elche",
+    "away": "Espanyol",
+    "1": 2.4,
+    "X": 3.3,
+    "2": 2.95,
+    "date": 1772370000,
+    "tournament": 36
+  },
+  {
+    "home": "Valencia",
+    "away": "Osasuna",
+    "1": 2.3,
+    "X": 3.3,
+    "2": 3.1,
+    "date": 1772378100,
+    "tournament": 36
+  },
+  {
+    "home": "Real Betis",
+    "away": "Sevilla FC",
+    "1": 1.8,
+    "X": 3.75,
+    "2": 4.2,
+    "date": 1772386200,
+    "tournament": 36
+  },
+  {
+    "home": "Girona",
+    "away": "Celta Vigo",
+    "1": 2.45,
+    "X": 3.4,
+    "2": 2.8,
+    "date": 1772395200,
+    "tournament": 36
+  },
+  {
+    "home": "Real Madrid",
+    "away": "Getafe",
+    "1": 1.28,
+    "X": 5.7,
+    "2": 9.5,
+    "date": 1772481600,
     "tournament": 36
   }
 ]

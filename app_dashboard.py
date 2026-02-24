@@ -408,14 +408,27 @@ def load_resources():
 
 # --- COMPONENTS ---
 def render_header():
+    wina_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "logo_winamax.png")
+    try:
+        with open(wina_path, "rb") as f:
+            w_b64 = base64.b64encode(f.read()).decode()
+            winamax_url = f"data:image/png;base64,{w_b64}"
+    except:
+        winamax_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Winamax_logo.svg/2560px-Winamax_logo.svg.png"
+
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown(clean_html("""
+        st.markdown(clean_html(f"""
         <div style="display: flex; align-items: center; gap: 15px;">
             <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">L</div>
             <div>
                 <h1 style="margin: 0; line-height: 1.2;">LALIGA <span style="font-weight: 300; opacity: 0.7;">ENTERPRISE</span></h1>
-                <p style="margin: 0; font-size: 12px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Big Data Analytics & Predictive Engine</p>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                    <p style="margin: 0; font-size: 12px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Big Data Analytics & Predictive Engine</p>
+                    <span style="opacity: 0.3; font-size: 10px;">|</span>
+                    <span style="font-size: 10px; opacity: 0.6; text-transform: uppercase; font-weight: 700;">Live Odds by</span>
+                    <img src="{winamax_url}" style="height: 24px; object-fit: contain; margin-top: -2px;">
+                </div>
             </div>
         </div>
         """), unsafe_allow_html=True)

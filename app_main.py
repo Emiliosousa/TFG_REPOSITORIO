@@ -92,8 +92,8 @@ def load_landing_css():
     }
     
     .us-logo-img { height: 90px; object-fit: contain; }
-    /* Winamax Logo Tweaks: Ensure red visibility */
-    .wina-logo-img { height: 50px; object-fit: contain; opacity: 1.0; } 
+    /* Winamax Logo Tweaks: Adjust height for square format */
+    .wina-logo-img { height: 85px; object-fit: contain; opacity: 1.0; } 
     
     .divider-v { height: 60px; width: 1px; background: #e0e0e0; margin: 0 10px; }
     

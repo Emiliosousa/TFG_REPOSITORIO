@@ -408,27 +408,14 @@ def load_resources():
 
 # --- COMPONENTS ---
 def render_header():
-    wina_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "logo_winamax.png")
-    try:
-        with open(wina_path, "rb") as f:
-            w_b64 = base64.b64encode(f.read()).decode()
-            winamax_url = f"data:image/png;base64,{w_b64}"
-    except:
-        winamax_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Winamax_logo.svg/2560px-Winamax_logo.svg.png"
-
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown(clean_html(f"""
+        st.markdown(clean_html("""
         <div style="display: flex; align-items: center; gap: 15px;">
             <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">L</div>
             <div>
                 <h1 style="margin: 0; line-height: 1.2;">LALIGA <span style="font-weight: 300; opacity: 0.7;">ENTERPRISE</span></h1>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                    <p style="margin: 0; font-size: 12px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Big Data Analytics & Predictive Engine</p>
-                    <span style="opacity: 0.3; font-size: 10px;">|</span>
-                    <span style="font-size: 10px; opacity: 0.6; text-transform: uppercase; font-weight: 700;">Live Odds by</span>
-                    <img src="{winamax_url}" style="height: 24px; object-fit: contain; margin-top: -2px;">
-                </div>
+                <p style="margin: 0; font-size: 12px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Big Data Analytics & Predictive Engine</p>
             </div>
         </div>
         """), unsafe_allow_html=True)
@@ -510,7 +497,7 @@ def main():
         # New Dynamic Bankroll Input
         user_bankroll = st.sidebar.number_input(
             "GESTION DE BANCA (€)", 
-            min_value=100.0, 
+            min_value=1.0, 
             max_value=100000.0, 
             value=float(STAKING_CONFIG.get('bankroll', 1000)),
             step=100.0,
@@ -641,7 +628,7 @@ def main():
                     st_results = {}
                     p_map = {'1': ph, 'X': pd_prob, '2': pa, '1X': p_1x, 'X2': p_x2, '12': p_12}
                     q_map = {'1': oh, 'X': od, '2': oa, '1X': o_1x, 'X2': o_x2, '12': o_12}
-                    for op in ['1', 'X', '2', '1X', 'X2', '12']:
+                    for op in ['1', 'X', '2']:
                         st_results[op] = calcular_stake_profesional(
                             p_map[op], q_map[op], user_bankroll, rank_diff
                         )
@@ -654,32 +641,96 @@ def main():
                     with cols[col_idx % 2]:
                         render_match_card(h_clean, a_clean, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, value_bets)
 
+                        # Double chance row below the match card
+                        def ev_color_dc(ev):
+                            return "#10b981" if ev > 0.03 else "#ef4444" if ev < -0.05 else "#f59e0b"
 
+                        dc_data = [
+                            ('1X', f'{h_clean} o Empate', o_1x, p_1x, e_1x),
+                            ('X2', f'Empate o {a_clean}', o_x2, p_x2, e_x2),
+                            ('12', f'{h_clean} o {a_clean}', o_12, p_12, e_12),
+                        ]
+                        dc_cells = ""
+                        for code, label, odds_dc, prob_dc, ev_dc in dc_data:
+                            is_value = code in value_bets
+                            border = "2px solid #10b981" if is_value else "1px solid rgba(255,255,255,0.1)"
+                            shadow = "0 0 8px rgba(16,185,129,0.3)" if is_value else "none"
+                            dc_cells += f"""
+                            <div style="padding:8px;border-radius:4px;text-align:center;border:{border};box-shadow:{shadow};">
+                                <div style="font-size:9px;opacity:0.6;font-weight:700;">{code}</div>
+                                <div style="font-size:10px;opacity:0.8;">{label}</div>
+                                <div style="font-size:14px;font-weight:700;">{odds_dc:.2f}</div>
+                                <div style="font-size:10px;color:{ev_color_dc(ev_dc)};">EV {ev_dc:+.1%}</div>
+                                <div style="font-size:9px;opacity:0.5;">P {prob_dc:.0%}</div>
+                            </div>"""
 
-                        with st.container():
-                            st.markdown(clean_html("""
-                                <div style="margin-top: 15px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-                                    <span style="font-size: 14px; font-weight: 700; color: #a0aec0; text-transform: uppercase;">Auditoría de Valor y Staking Profesional</span>
-                                </div>
-                            """), unsafe_allow_html=True)
-                            # Risk Analysis Header
-                            risk_level = "ALTO" if rank_diff < 0.5 else ("MEDIO" if rank_diff < 1.0 else "BAJO")
-                            risk_color = "#ef4444" if risk_level == "ALTO" else ("#f59e0b" if risk_level == "MEDIO" else "#10b981")
-                            risk_html = f"""
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:10px 14px; border-radius:6px; margin-bottom:12px; border-left:4px solid {risk_color};">
-                                <span style="font-size:12px; color:rgba(255,255,255,0.7); font-weight:600; text-transform:uppercase;">Evaluación de Riesgo Algorítmico</span>
-                                <div style="text-align:right;">
-                                    <span style="font-size:10px; color:rgba(255,255,255,0.4); margin-right:8px;">(Diff Elo: {rank_diff:.1f})</span>
-                                    <span style="font-size:12px; font-weight:800; color:{risk_color};">{risk_level}</span>
-                                </div>
+                        dc_html = f"""
+                        <div style="margin-top:4px;margin-bottom:8px;">
+                            <div style="font-size:10px;opacity:0.5;margin-bottom:4px;font-weight:700;">DOBLE OPORTUNIDAD</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+                                {dc_cells}
                             </div>
-                            """
-                            st.markdown(clean_html(risk_html), unsafe_allow_html=True)
-                            
+                        </div>"""
+                        st.markdown(dc_html, unsafe_allow_html=True)
+
+                        risk_level = "ALTO" if rank_diff < 0.5 else ("MEDIO" if rank_diff < 1.0 else "BAJO")
+                        risk_color = "#ef4444" if risk_level == "ALTO" else ("#f59e0b" if risk_level == "MEDIO" else "#10b981")
+                        risk_html = f"""
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:6px; margin-bottom:8px; border-left:4px solid {risk_color};">
+                            <span style="font-size:11px; color:rgba(255,255,255,0.7); font-weight:600; text-transform:uppercase;">Riesgo Algorítmico</span>
+                            <div style="text-align:right;">
+                                <span style="font-size:9px; color:rgba(255,255,255,0.4); margin-right:6px;">(Diff Elo: {rank_diff:.1f})</span>
+                                <span style="font-size:11px; font-weight:800; color:{risk_color};">{risk_level}</span>
+                            </div>
+                        </div>
+                        """
+                        st.markdown(risk_html, unsafe_allow_html=True)
+                        
+                        # --- STAKING SUMMARY (COMPACT) ---
+                        KELLY_FRACTION = 0.25
+                        MAX_KELLY_STAKE = 0.05
+                        stake_rows = ""
+                        option_labels = {
+                            '1': h_clean, 'X': 'Empate', '2': a_clean,
+                            '1X': f'{h_clean} o Empate', 'X2': f'Empate o {a_clean}', '12': f'{h_clean} o {a_clean}'
+                        }
+                        
+                        # Only show viable stakes to save space, or very compact rows.
+                        for idx_op, op in enumerate(['1', 'X', '2', '1X', 'X2', '12']):
+                            if idx_op == 3:
+                                stake_rows += """<tr><td colspan="4" style="padding:2px;text-align:center;opacity:0.3;font-size:8px;border-bottom:1px solid rgba(255,255,255,0.1);"></td></tr>"""
+                            odds = q_map[op]
+                            ev_val = ev_map[op]
+                            if ev_val > min_ev and odds > 1:
+                                kelly_raw = (p_map[op] * odds - 1) / (odds - 1)
+                                kelly_frac = np.clip(kelly_raw * KELLY_FRACTION, 0, MAX_KELLY_STAKE)
+                                importe = round(kelly_frac * user_bankroll, 2)
+                                color, amount, kelly_pct, edge = "#10b981", f"€{importe:.0f}", f"{kelly_frac:.1%}", f"{ev_val:+.1%}"
+                            else:
+                                color, amount, kelly_pct, edge = "rgba(255,255,255,0.3)", "-", "-", f"{ev_val:+.1%}"
+
+                            stake_rows += f"""<tr style="color:{color};border-bottom:1px solid rgba(255,255,255,0.05);font-size:10px;">
+                                <td style="padding:4px;font-weight:600;">{op}</td>
+                                <td style="padding:4px;text-align:center;">{edge}</td>
+                                <td style="padding:4px;text-align:center;">{kelly_pct}</td>
+                                <td style="padding:4px;text-align:right;font-weight:bold;">{amount}</td>
+                            </tr>"""
+
+                        stake_html = f"""<table style="width:100%;font-size:10px;border-collapse:collapse;margin-top:4px;margin-bottom:8px;background:rgba(0,0,0,0.2);border-radius:6px;overflow:hidden;">
+                            <tr style="opacity:0.4;background:rgba(255,255,255,0.05);">
+                                <th style="text-align:left;padding:6px;">Mercado</th>
+                                <th style="padding:6px;text-align:center;">EV</th>
+                                <th style="padding:6px;text-align:center;">Kelly</th>
+                                <th style="padding:6px;text-align:right;">Stake</th>
+                            </tr>
+                            {stake_rows}
+                        </table>"""
+                        st.markdown(stake_html, unsafe_allow_html=True)
+                        
+                        
+                        with st.expander("Ver Análisis Estadístico Detallado"):
                             grid_html = ""
-                            for idx_op, op in enumerate(['1', 'X', '2', '1X', 'X2', '12']):
-                                if idx_op == 3:
-                                    grid_html += """<div style="text-align:center;font-size:10px;font-weight:700;opacity:0.5;margin:8px 0 4px 0;">DOBLE OPORTUNIDAD</div>"""
+                            for op in ['1', 'X', '2']:
                                 p = p_map[op]
                                 o = q_map[op]
                                 res = st_results.get(op)
@@ -710,31 +761,20 @@ def main():
                                     </div>
                                 </div>
                                 """
-                            st.markdown(clean_html(grid_html), unsafe_allow_html=True)
+                            st.markdown(grid_html, unsafe_allow_html=True)
 
                             viables = [s for s in st_results.values() if s and s.get('filtro_pasado')]
                             if viables:
                                 mejor = max(viables, key=lambda x: x['edge_pct'])
-                                st.markdown(clean_html(f"""
+                                st.markdown(f"""
                                 <div style="background: rgba(16,185,129,0.1); padding: 12px; border-radius: 6px; border: 1px solid rgba(16,185,129,0.3); text-align: center; margin-top: 10px;">
                                     <div style="font-size: 10px; color: #10b981; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px;">OPORTUNIDAD DETECTADA</div>
                                     <div style="font-size: 14px; font-weight: 800; color: white;">Stake {mejor['stake_scale']}/10 <span style="color: #10b981;">(€{mejor['importe']})</span></div>
                                 </div>
-                                """), unsafe_allow_html=True)
-                            else:
-                                st.markdown(clean_html(f"""
-                                <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center; margin-top: 10px;">
-                                    <div style="font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 600;">NO EXISTEN APUESTAS VIABLES SEGÚN EL FILTRO ALGORÍTMICO</div>
-                                </div>
-                                """), unsafe_allow_html=True)
+                                """, unsafe_allow_html=True)
 
-                            # --- MODEL JUSTIFICATION ---
-                            st.markdown("---")
-                            st.markdown("**Justificacion del Modelo (Factores Clave)**")
-
-                            # Read team stats from the DataFrame directly (more reliable than X_row)
+                            # Read team stats from the DataFrame directly
                             def get_team_stat(team, col_prefix, role='any'):
-                                """Get latest stat for a team from df."""
                                 if role == 'home':
                                     subset = df[df['HomeTeam'] == team]
                                     col = f'Home_{col_prefix}'
@@ -742,7 +782,6 @@ def main():
                                     subset = df[df['AwayTeam'] == team]
                                     col = f'Away_{col_prefix}'
                                 else:
-                                    # Try home first, then away
                                     h_sub = df[df['HomeTeam'] == team]
                                     a_sub = df[df['AwayTeam'] == team]
                                     if not h_sub.empty and not a_sub.empty:
@@ -774,8 +813,7 @@ def main():
                                 ('TM Value', 'TM_Value'),
                                 ('xG (L5)', 'xG_Avg_L5'),
                                 ('Streak (L5)', 'Streak_L5'),
-                                ('Pressure (L5)', 'Pressure_Avg_L5'),
-                                ('Dominance', 'Dominance_Avg_L5'),
+                                ('Pressure (L5)', 'Pressure_Avg_L5')
                             ]
 
                             rat_rows = ""
@@ -789,7 +827,6 @@ def main():
                                 h_style = "color:#10b981;font-weight:bold;" if h_val > a_val else ""
                                 a_style = "color:#10b981;font-weight:bold;" if a_val > h_val else ""
 
-                                # Formatting
                                 if 'Market' in label or 'TM' in label:
                                     hv, av = f"{h_val:.1f}M", f"{a_val:.1f}M"
                                 elif 'xG' in label or 'Pressure' in label or 'Dominance' in label:
@@ -800,87 +837,24 @@ def main():
                                     hv, av = f"{int(h_val)}", f"{int(a_val)}"
 
                                 rat_rows += f"""
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); background: rgba(0,0,0,0.1);">
-                                    <div style="flex: 1; text-align: left; opacity: 0.5; font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">{label}</div>
-                                    <div style="flex: 1; text-align: center; font-size: 13px; {h_style}">{hv}</div>
-                                    <div style="flex: 1; text-align: right; font-size: 13px; {a_style}">{av}</div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); background: rgba(0,0,0,0.1);">
+                                    <div style="flex: 1; text-align: left; opacity: 0.5; font-size: 10px; text-transform: uppercase;">{label}</div>
+                                    <div style="flex: 1; text-align: center; font-size: 11px; {h_style}">{hv}</div>
+                                    <div style="flex: 1; text-align: right; font-size: 11px; {a_style}">{av}</div>
                                 </div>"""
 
                             if rat_rows:
                                 rat_html = f"""
-                                <div style="margin-top:16px; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.06);">
-                                        <div style="flex: 1; text-align: left; font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase;">Métrica</div>
-                                        <div style="flex: 1; text-align: center; font-size: 11px; font-weight: 700; color: #fff;">Local ({h_clean})</div>
-                                        <div style="flex: 1; text-align: right; font-size: 11px; font-weight: 700; color: #fff;">Visitante ({a_clean})</div>
+                                <div style="margin-top:12px; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; overflow: hidden;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                        <div style="flex: 1; text-align: left; font-size: 9px; color: rgba(255,255,255,0.4); text-transform: uppercase;">Métrica</div>
+                                        <div style="flex: 1; text-align: center; font-size: 9px; font-weight: 700; color: #fff;">Local</div>
+                                        <div style="flex: 1; text-align: right; font-size: 9px; font-weight: 700; color: #fff;">Visitante</div>
                                     </div>
                                     {rat_rows}
                                 </div>"""
-                                st.markdown(clean_html(rat_html), unsafe_allow_html=True)
-                            else:
-                                st.caption("No hay metricas disponibles para este enfrentamiento.")
+                                st.markdown(rat_html, unsafe_allow_html=True)
 
-                            # --- STAKING SUMMARY (exact backtest formula) ---
-                            # Backtest params: Kelly 1/4, max stake 5% bankroll, EV > min_ev
-                            KELLY_FRACTION = 0.25
-                            MAX_KELLY_STAKE = 0.05  # 5% of bankroll cap
-                            st.markdown("---")
-                            st.markdown(f"**Gestion de Banca - Kelly 1/4 (Bankroll: {user_bankroll:.0f} EUR)**")
-                            stake_rows = ""
-                            option_labels = {
-                                '1': f'Local ({h_clean})', 'X': 'Empate', '2': f'Visitante ({a_clean})',
-                                '1X': f'{h_clean} o Empate', 'X2': f'Empate o {a_clean}', '12': f'{h_clean} o {a_clean}'
-                            }
-                            all_options = ['1', 'X', '2', '1X', 'X2', '12']
-                            for idx_op, op in enumerate(all_options):
-                                # Separator between single and double chance
-                                if idx_op == 3:
-                                    stake_rows += """<tr><td colspan="5" style="padding:4px;text-align:center;opacity:0.3;font-size:9px;border-bottom:1px solid rgba(255,255,255,0.1);">DOBLE OPORTUNIDAD</td></tr>"""
-                                p = p_map[op]
-                                odds = q_map[op]
-                                ev_val = ev_map[op]
-
-                                if ev_val > min_ev and odds > 1:
-                                    # Exact backtest formula
-                                    kelly_raw = (p * odds - 1) / (odds - 1)
-                                    kelly_frac = kelly_raw * KELLY_FRACTION
-                                    kelly_frac = min(kelly_frac, MAX_KELLY_STAKE)
-                                    kelly_frac = max(kelly_frac, 0)
-                                    importe = round(kelly_frac * user_bankroll, 2)
-
-                                    color = "#10b981"
-                                    amount = f"{importe:.2f} EUR"
-                                    kelly_pct = f"{kelly_frac:.2%}"
-                                    edge = f"{ev_val:+.1%}"
-                                    verdict = "APOSTAR"
-                                else:
-                                    color = "rgba(255,255,255,0.3)"
-                                    amount = "-"
-                                    kelly_pct = "-"
-                                    edge = f"{ev_val:+.1%}"
-                                    if ev_val <= min_ev:
-                                        verdict = f"EV < {min_ev:.0%}"
-                                    else:
-                                        verdict = "Sin valor"
-
-                                stake_rows += f"""<tr style="color:{color};border-bottom:1px solid rgba(255,255,255,0.05);">
-                                    <td style="padding:6px 4px;font-weight:bold;">{op} {option_labels[op]}</td>
-                                    <td style="padding:6px 4px;text-align:center;">{edge}</td>
-                                    <td style="padding:6px 4px;text-align:center;">{kelly_pct}</td>
-                                    <td style="padding:6px 4px;text-align:center;font-weight:bold;">{amount}</td>
-                                    <td style="padding:6px 4px;text-align:center;font-size:10px;">{verdict}</td>
-                                </tr>"""
-                            stake_html = f"""<table style="width:100%;font-size:11px;border-collapse:collapse;margin-top:8px;">
-                                <tr style="opacity:0.4;border-bottom:1px solid rgba(255,255,255,0.1);">
-                                    <th style="text-align:left;padding:6px 4px;">Opcion</th>
-                                    <th style="padding:6px 4px;">EV</th>
-                                    <th style="padding:6px 4px;">Kelly 1/4</th>
-                                    <th style="padding:6px 4px;">Apostar</th>
-                                    <th style="padding:6px 4px;">Estado</th>
-                                </tr>
-                                {stake_rows}
-                            </table>"""
-                            st.markdown(clean_html(stake_html), unsafe_allow_html=True)
                     col_idx += 1
 
                 if not found_any:

@@ -27,6 +27,10 @@ def go_laliga():
     st.session_state['current_app'] = 'laliga'
     st.rerun()
 
+def go_bundesliga():
+    st.session_state['current_app'] = 'bundesliga'
+    st.rerun()
+
 # --- UTILS: LOAD ASSETS ---
 def get_img_base64(path):
     if os.path.exists(path):
@@ -39,17 +43,20 @@ ASSETS_DIR = "assets"
 logo_us = get_img_base64(os.path.join(ASSETS_DIR, "logo_us.png"))
 logo_pl = get_img_base64(os.path.join(ASSETS_DIR, "logo_pl.png"))
 logo_laliga = get_img_base64(os.path.join(ASSETS_DIR, "logo_laliga.png"))
+logo_bl = get_img_base64(os.path.join(ASSETS_DIR, "logo_bl.png"))
 logo_winamax = get_img_base64(os.path.join(ASSETS_DIR, "logo_winamax.png"))
 
 # Fallback URLs
 URL_US = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Logotipo_de_la_Universidad_de_Sevilla.svg/1200px-Logotipo_de_la_Universidad_de_Sevilla.svg.png"
 URL_PL = "https://upload.wikimedia.org/wikipedia/en/thumb/f/f2/Premier_League_Logo.svg/1200px-Premier_League_Logo.svg.png"
 URL_LL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/2048px-LaLiga_logo_2023.svg.png"
+URL_BL = "https://upload.wikimedia.org/wikipedia/en/d/df/Bundesliga_logo_%282017%29.svg"
 URL_WINA = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Winamax_logo.svg/2560px-Winamax_logo.svg.png"
 
 src_us = f"data:image/png;base64,{logo_us}" if logo_us else URL_US
 src_pl = f"data:image/png;base64,{logo_pl}" if logo_pl else URL_PL
 src_laliga = f"data:image/png;base64,{logo_laliga}" if logo_laliga else URL_LL
+src_bl = f"data:image/png;base64,{logo_bl}" if logo_bl else URL_BL
 src_winamax = f"data:image/png;base64,{logo_winamax}" if logo_winamax else URL_WINA
 
 # --- CSS STYLING (High Fidelity Academic) ---
@@ -174,9 +181,15 @@ def load_landing_css():
     }
     .bg-pl { background: #3d195b; }
     .bg-ll { background: #111111; }
+    .bg-bl { background: #d20515; }
     
     /* PL Logo Tweak: Invert color to white if using purple bg */
     .card-logo-pl {
+        height: 100px;
+        object-fit: contain;
+        filter: brightness(0) invert(1) drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+    }
+    .card-logo-bl {
         height: 100px;
         object-fit: contain;
         filter: brightness(0) invert(1) drop-shadow(0 4px 10px rgba(0,0,0,0.3));
@@ -268,16 +281,16 @@ def render_landing():
     <div class="hero-section">
         <h1 class="main-headline">Advanced Predictive Modeling<br>in Sports Betting Markets</h1>
         <p class="main-subheadline">
-            Algorithmic Trading & Machine Learning implementation for value detection in Premier League & LaLiga markets. 
+            Algorithmic Trading & Machine Learning implementation for value detection in Premier League, LaLiga & Bundesliga markets. 
             Powered by <strong>XGBoost</strong> and <strong>Optuna</strong> hyperparameter optimization.
         </p>
     </div>
     """, unsafe_allow_html=True)
     
     # MODULES 
-    c1, c2, c3 = st.columns([1, 6, 1])
+    c1, c2, c3 = st.columns([1, 8, 1])
     with c2:
-        col_A, col_B = st.columns(2, gap="large")
+        col_A, col_B, col_C = st.columns(3, gap="large")
         
         with col_A:
             st.markdown(f"""
@@ -315,6 +328,24 @@ def render_landing():
             """, unsafe_allow_html=True)
             if st.button("OPEN DASHBOARD", key="btn_ll"):
                 go_laliga()
+                
+        with col_C:
+            st.markdown(f"""
+            <div class="module-card">
+                <div class="card-header-bg bg-bl">
+                     <img src="{src_bl}" class="card-logo-bl">
+                </div>
+                <div class="card-body">
+                    <div class="card-title">Bundesliga</div>
+                    <div class="card-desc">
+                        Specific model trained on German football metrics. 
+                        Tactical Scouting & Live Value Bets.
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("OPEN DASHBOARD", key="btn_bl"):
+                go_bundesliga()
 
     # FOOTER
     st.markdown("""
@@ -340,6 +371,14 @@ elif st.session_state['current_app'] == 'laliga':
         if st.button("RETURN TO HUB"):
             go_home()
     app_dashboard.main()
+
+elif st.session_state['current_app'] == 'bundesliga':
+    import app_bundesliga
+    with st.sidebar:
+        st.markdown("---")
+        if st.button("RETURN TO HUB"):
+            go_home()
+    app_bundesliga.main()
 
 else:
     render_landing()

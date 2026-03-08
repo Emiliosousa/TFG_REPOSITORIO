@@ -1,182 +1,164 @@
 [
   {
-    "home": "Wolverhampton",
-    "away": "Aston Villa",
-    "1": 3.8,
-    "X": 3.8,
-    "2": 1.88,
-    "date": 1772222400,
-    "tournament": 1
-  },
-  {
-    "home": "Bournemouth",
-    "away": "Sunderland",
-    "1": 1.8,
-    "X": 3.85,
-    "2": 4.1,
-    "date": 1772281800,
-    "tournament": 1
-  },
-  {
     "home": "Burnley",
-    "away": "Brentford",
-    "1": 4.3,
-    "X": 3.9,
-    "2": 1.76,
-    "date": 1772290800,
-    "tournament": 1
-  },
-  {
-    "home": "Liverpool",
-    "away": "West Ham",
-    "1": 1.4,
-    "X": 5.3,
-    "2": 6.5,
-    "date": 1772290800,
-    "tournament": 1
-  },
-  {
-    "home": "Newcastle",
-    "away": "Everton",
-    "1": 1.76,
+    "away": "Bournemouth",
+    "1": 3.65,
     "X": 3.95,
-    "2": 4.2,
-    "date": 1772290800,
+    "2": 1.78,
+    "date": 1773500400,
     "tournament": 1
   },
   {
-    "home": "Leeds",
-    "away": "Manchester City",
-    "1": 4.8,
-    "X": 4.4,
-    "2": 1.6,
-    "date": 1772299800,
-    "tournament": 1
-  },
-  {
-    "home": "Brighton",
-    "away": "Nottingham Forest",
-    "1": 2.1,
-    "X": 3.6,
-    "2": 3.3,
-    "date": 1772373600,
-    "tournament": 1
-  },
-  {
-    "home": "Fulham",
-    "away": "Tottenham",
-    "1": 2.05,
-    "X": 3.7,
-    "2": 3.25,
-    "date": 1772373600,
-    "tournament": 1
-  },
-  {
-    "home": "Manchester United",
-    "away": "Crystal Palace",
-    "1": 1.56,
-    "X": 4.5,
-    "2": 5.2,
-    "date": 1772373600,
+    "home": "Sunderland",
+    "away": "Brighton",
+    "1": 3.1,
+    "X": 3.35,
+    "2": 2.1,
+    "date": 1773500400,
     "tournament": 1
   },
   {
     "home": "Arsenal",
-    "away": "Chelsea",
-    "1": 1.62,
+    "away": "Everton",
+    "1": 1.27,
+    "X": 5.2,
+    "2": 9.5,
+    "date": 1773509400,
+    "tournament": 1
+  },
+  {
+    "home": "Chelsea",
+    "away": "Newcastle",
+    "1": 1.74,
+    "X": 4.1,
+    "2": 3.75,
+    "date": 1773509400,
+    "tournament": 1
+  },
+  {
+    "home": "West Ham",
+    "away": "Manchester City",
+    "1": 4.5,
+    "X": 4.5,
+    "2": 1.56,
+    "date": 1773518400,
+    "tournament": 1
+  },
+  {
+    "home": "Crystal Palace",
+    "away": "Leeds",
+    "1": 2.15,
+    "X": 3.35,
+    "2": 3.1,
+    "date": 1773583200,
+    "tournament": 1
+  },
+  {
+    "home": "Manchester United",
+    "away": "Aston Villa",
+    "1": 1.72,
+    "X": 4,
+    "2": 3.95,
+    "date": 1773583200,
+    "tournament": 1
+  },
+  {
+    "home": "Nottingham Forest",
+    "away": "Fulham",
+    "1": 2.1,
+    "X": 3.45,
+    "2": 3.15,
+    "date": 1773583200,
+    "tournament": 1
+  },
+  {
+    "home": "Liverpool",
+    "away": "Tottenham",
+    "1": 1.32,
+    "X": 5.5,
+    "2": 6.75,
+    "date": 1773592200,
+    "tournament": 1
+  },
+  {
+    "home": "Brentford",
+    "away": "Wolverhampton",
+    "1": 1.52,
     "X": 4.2,
-    "2": 4.9,
-    "date": 1772382600,
+    "2": 5.1,
+    "date": 1773691200,
     "tournament": 1
   },
   {
     "home": "Bournemouth",
-    "away": "Brentford",
-    "1": 2.2,
-    "X": 3.6,
-    "2": 2.8,
-    "date": 1772566200,
-    "tournament": 1
-  },
-  {
-    "home": "Everton",
-    "away": "Burnley",
-    "1": 1.64,
-    "X": 3.75,
-    "2": 4.8,
-    "date": 1772566200,
-    "tournament": 1
-  },
-  {
-    "home": "Leeds",
-    "away": "Sunderland",
-    "1": 1.88,
-    "X": 3.45,
-    "2": 3.8,
-    "date": 1772566200,
-    "tournament": 1
-  },
-  {
-    "home": "Wolverhampton",
-    "away": "Liverpool",
-    "1": 5.8,
-    "X": 4.9,
-    "2": 1.41,
-    "date": 1772568900,
+    "away": "Manchester United",
+    "1": 2.95,
+    "X": 3.8,
+    "2": 2.05,
+    "date": 1774036800,
     "tournament": 1
   },
   {
     "home": "Brighton",
-    "away": "Arsenal",
-    "1": 4.7,
-    "X": 3.95,
-    "2": 1.6,
-    "date": 1772652600,
+    "away": "Liverpool",
+    "1": 3.05,
+    "X": 3.75,
+    "2": 2,
+    "date": 1774096200,
     "tournament": 1
   },
   {
     "home": "Fulham",
-    "away": "West Ham",
-    "1": 1.96,
-    "X": 3.55,
-    "2": 3.4,
-    "date": 1772652600,
+    "away": "Burnley",
+    "1": 1.5,
+    "X": 4.2,
+    "2": 5.3,
+    "date": 1774105200,
     "tournament": 1
   },
   {
-    "home": "Aston Villa",
+    "home": "Everton",
     "away": "Chelsea",
-    "1": 2.55,
-    "X": 3.6,
-    "2": 2.35,
-    "date": 1772652600,
+    "1": 3.55,
+    "X": 3.65,
+    "2": 1.88,
+    "date": 1774114200,
     "tournament": 1
   },
   {
-    "home": "Manchester City",
-    "away": "Nottingham Forest",
-    "1": 1.36,
-    "X": 5.1,
-    "2": 6.5,
-    "date": 1772652600,
+    "home": "Leeds",
+    "away": "Brentford",
+    "1": 2.45,
+    "X": 3.4,
+    "2": 2.55,
+    "date": 1774123200,
     "tournament": 1
   },
   {
     "home": "Newcastle",
-    "away": "Manchester United",
-    "1": 2.3,
+    "away": "Sunderland",
+    "1": 1.6,
+    "X": 3.9,
+    "2": 4.8,
+    "date": 1774180800,
+    "tournament": 1
+  },
+  {
+    "home": "Aston Villa",
+    "away": "West Ham",
+    "1": 1.8,
     "X": 3.75,
-    "2": 2.55,
-    "date": 1772655300,
+    "2": 3.85,
+    "date": 1774188900,
     "tournament": 1
   },
   {
     "home": "Tottenham",
-    "away": "Crystal Palace",
-    "1": 2.2,
-    "X": 3.4,
-    "2": 2.9,
-    "date": 1772740800,
+    "away": "Nottingham Forest",
+    "1": 2.4,
+    "X": 3.35,
+    "2": 2.65,
+    "date": 1774188900,
     "tournament": 1
   }
 ]

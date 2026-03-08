@@ -13,20 +13,17 @@ import re
 
 # Ensure src is importable
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if not os.path.exists(os.path.join(BASE_DIR, 'src')):
-    # Check if LaLiga subfolder exists directly (Correct path when running in TFG_REPOSITORIO)
-    if os.path.exists(os.path.join(BASE_DIR, 'LaLiga', 'src')):
-        BASE_DIR = os.path.join(BASE_DIR, 'LaLiga')
-    # Check if nested in TFG_REPOSITORIO/LaLiga (Correct path when running in root)
-    elif os.path.exists(os.path.join(BASE_DIR, 'TFG_REPOSITORIO', 'LaLiga', 'src')):
-        BASE_DIR = os.path.join(BASE_DIR, 'TFG_REPOSITORIO', 'LaLiga')
+if os.path.exists(os.path.join(BASE_DIR, 'LaLiga', 'src')):
+    BASE_DIR = os.path.join(BASE_DIR, 'LaLiga')
+elif os.path.exists(os.path.join(BASE_DIR, 'TFG_REPOSITORIO', 'LaLiga', 'src')):
+    BASE_DIR = os.path.join(BASE_DIR, 'TFG_REPOSITORIO', 'LaLiga')
+
 sys.path.append(BASE_DIR)
 try:
     from src.feature_engineering import generate_features
     from src.staking_system import calcular_stake_profesional
     from src.staking_config import STAKING_CONFIG
 except ImportError as e:
-    st.error(f"Error cargando los módulos de LaLiga: {e}", icon=None)
     def calcular_stake_profesional(prob, quota, bankroll, rank_diff=0):
         ev = (prob * quota) - 1
         edge_pct = ev * 100
@@ -671,7 +668,7 @@ def main():
                                 {dc_cells}
                             </div>
                         </div>"""
-                        st.markdown(dc_html, unsafe_allow_html=True)
+                        st.markdown(clean_html(dc_html), unsafe_allow_html=True)
 
                         risk_level = "ALTO" if rank_diff < 0.5 else ("MEDIO" if rank_diff < 1.0 else "BAJO")
                         risk_color = "#ef4444" if risk_level == "ALTO" else ("#f59e0b" if risk_level == "MEDIO" else "#10b981")
@@ -684,7 +681,7 @@ def main():
                             </div>
                         </div>
                         """
-                        st.markdown(risk_html, unsafe_allow_html=True)
+                        st.markdown(clean_html(risk_html), unsafe_allow_html=True)
                         
                         # --- STAKING SUMMARY (COMPACT) ---
                         KELLY_FRACTION = 0.25
@@ -725,7 +722,7 @@ def main():
                             </tr>
                             {stake_rows}
                         </table>"""
-                        st.markdown(stake_html, unsafe_allow_html=True)
+                        st.markdown(clean_html(stake_html), unsafe_allow_html=True)
                         
                         
                         with st.expander("Ver Análisis Estadístico Detallado"):

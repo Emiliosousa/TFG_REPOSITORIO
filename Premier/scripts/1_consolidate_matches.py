@@ -31,7 +31,7 @@ def main():
     print("🚀 Starting Premier League Data Consolidation (2010-2026)...")
     
     # 1. Find all E0 csv files
-    files = glob.glob(os.path.join(SOURCE_DIR, "E0-*.csv"))
+    files = glob.glob(os.path.join(SOURCE_DIR, "E0*.csv"))
     print(f"📂 Found {len(files)} season files.")
     
     all_matches = []
@@ -42,7 +42,7 @@ def main():
             df = pd.read_csv(f, encoding='latin1') # classic football-data encoding
             
             # Filter essential columns
-            cols = ['Date', 'HomeTeam', 'AwayTeam', 'FTHG', 'FTAG', 'FTR']
+            cols = ['Date', 'HomeTeam', 'AwayTeam', 'FTHG', 'FTAG', 'FTR', 'HS', 'AS', 'HST', 'AST', 'HF', 'AF', 'HC', 'AC']
             # Check if columns exist
             if not all(c in df.columns for c in cols):
                 print(f"⚠️ Skipping {os.path.basename(f)}: Missing columns.")

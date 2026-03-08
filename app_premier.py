@@ -281,7 +281,6 @@ MODEL_FEATURES = [
     'Home_xG_Avg_L5', 'Away_xG_Avg_L5',
     'Home_Streak_L5', 'Away_Streak_L5',
     'Home_Pressure_Avg_L5', 'Away_Pressure_Avg_L5',
-    'Home_Dominance_Avg_L5', 'Away_Dominance_Avg_L5',
     'Home_FIFA_Ova', 'Away_FIFA_Ova',
     'Home_Market_Value', 'Away_Market_Value'
 ]
@@ -291,15 +290,29 @@ TEAM_MAPPING = {
     'Spurs': 'Tottenham', 'Newcastle': 'Newcastle United',
     'Leicester': 'Leicester City', 'Norwich': 'Norwich City',
     'Leeds': 'Leeds United', 'Sheffield United': 'Sheffield Utd',
-    'West Ham': 'West Ham United', 'Wolves': 'Wolverhampton',
-    'Brighton': 'Brighton', 'Bournemouth': 'Bournemouth',
-    "Nott'm Forest": 'Nottingham Forest', 'Luton': 'Luton',
-    'Ipswich': 'Ipswich', 'Fulham': 'Fulham', 'Chelsea': 'Chelsea',
+    'West Ham': 'West Ham United', 'Wolves': 'Wolverhampton Wanderers',
+    'Wolverhampton': 'Wolverhampton Wanderers',
+    'Brighton': 'Brighton & Hove Albion', 'Brighton & Hove Albion': 'Brighton & Hove Albion',
+    'Bournemouth': 'AFC Bournemouth', 'AFC Bournemouth': 'AFC Bournemouth',
+    "Nott'm Forest": "Nott'm Forest", 'Nottingham Forest': "Nott'm Forest",
+    'Luton': 'Luton Town', 'Luton Town': 'Luton Town',
+    'Ipswich': 'Ipswich Town', 'Ipswich Town': 'Ipswich Town',
+    'Fulham': 'Fulham', 'Chelsea': 'Chelsea',
     'Arsenal': 'Arsenal', 'Liverpool': 'Liverpool', 'Aston Villa': 'Aston Villa',
     'Brentford': 'Brentford', 'Crystal Palace': 'Crystal Palace',
     'Everton': 'Everton', 'Southampton': 'Southampton',
-    'Manchester Utd': 'Manchester United', 'Manchester City': 'Manchester City',
-    'Nottingham Forest': 'Nottingham Forest', 'Sheffield Utd': 'Sheffield Utd',
+    'Manchester Utd': 'Manchester United', 'Manchester United': 'Manchester United',
+    'Manchester City': 'Manchester City',
+    'Sheffield Utd': 'Sheffield Utd', 'Burnley': 'Burnley',
+    'Tottenham': 'Tottenham', 'Newcastle United': 'Newcastle United',
+    'Sunderland': 'Sunderland', 'Watford': 'Watford',
+    'West Brom': 'West Bromwich Albion', 'West Bromwich Albion': 'West Bromwich Albion',
+    'Stoke': 'Stoke City', 'Stoke City': 'Stoke City',
+    'Hull': 'Hull City', 'Hull City': 'Hull City',
+    'Swansea': 'Swansea City', 'Swansea City': 'Swansea City',
+    'Cardiff': 'Cardiff City', 'Cardiff City': 'Cardiff City',
+    'Huddersfield': 'Huddersfield Town', 'Huddersfield Town': 'Huddersfield Town',
+    'QPR': 'Queens Park Rangers', 'Queens Park Rangers': 'Queens Park Rangers',
 }
 
 # --- UTILS ---
@@ -344,6 +357,9 @@ def get_model_probs(df, model, home_team, away_team):
     if df is None or model is None:
         return None
 
+    # Use the model's actual features if available
+    feats = get_features_from_model(model)
+
     subset = df[(df['HomeTeam'] == home_team) & (df['AwayTeam'] == away_team)]
 
     if not subset.empty:
@@ -355,31 +371,23 @@ def get_model_probs(df, model, home_team, away_team):
             return None
         h_row, a_row = h_last.iloc[0], a_last.iloc[0]
 
-        row = pd.Series(0.0, index=MODEL_FEATURES)
+        row = pd.Series(0.0, index=feats)
         def gs(r, team, p):
             return r.get(f"Home_{p}", 0) if r['HomeTeam'] == team else r.get(f"Away_{p}", 0)
 
-        row['Home_Elo'] = gs(h_row, home_team, 'Elo')
-        row['Away_Elo'] = gs(a_row, away_team, 'Elo')
-        row['Home_xG_Avg_L5'] = gs(h_row, home_team, 'xG_Avg_L5')
-        row['Away_xG_Avg_L5'] = gs(a_row, away_team, 'xG_Avg_L5')
-        row['Home_Streak_L5'] = gs(h_row, home_team, 'Streak_L5')
-        row['Away_Streak_L5'] = gs(a_row, away_team, 'Streak_L5')
-        row['Home_Pressure_Avg_L5'] = gs(h_row, home_team, 'Pressure_Avg_L5')
-        row['Away_Pressure_Avg_L5'] = gs(a_row, away_team, 'Pressure_Avg_L5')
-        row['Home_Dominance_Avg_L5'] = gs(h_row, home_team, 'Dominance_Avg_L5')
-        row['Away_Dominance_Avg_L5'] = gs(a_row, away_team, 'Dominance_Avg_L5')
-        row['Home_FIFA_Ova'] = gs(h_row, home_team, 'FIFA_Ova')
-        row['Away_FIFA_Ova'] = gs(a_row, away_team, 'FIFA_Ova')
-        row['Home_Market_Value'] = gs(h_row, home_team, 'Market_Value')
-        row['Away_Market_Value'] = gs(a_row, away_team, 'Market_Value')
+        for f in feats:
+            if f.startswith('Home_'):
+                row[f] = gs(h_row, home_team, f[5:])
+            elif f.startswith('Away_'):
+                row[f] = gs(a_row, away_team, f[5:])
 
     try:
-        X = row[MODEL_FEATURES].to_frame().T
+        X = row.to_frame().T.reindex(columns=feats, fill_value=0)
         X = X.apply(pd.to_numeric, errors='coerce').fillna(0)
         proba = model.predict_proba(X)[0]
         return float(proba[2]), float(proba[1]), float(proba[0]), row
     except Exception as e:
+        print(f"DEBUG Premier get_model_probs error: {e}")
         return None
 
 
@@ -427,7 +435,8 @@ def load_resources():
     model = None
     if os.path.exists(MODEL_FILE):
         try:
-            model = joblib.load(MODEL_FILE)
+            artifact = joblib.load(MODEL_FILE)
+            model = artifact['model'] if isinstance(artifact, dict) and 'model' in artifact else artifact
         except Exception:
             pass
     return df, model
@@ -555,7 +564,13 @@ def main():
 
         matches = []
         if os.path.exists(ODDS_FILE):
-            try: matches = json.load(open(ODDS_FILE))
+            try: 
+                matches = json.load(open(ODDS_FILE))
+                if matches:
+                    matches.sort(key=lambda x: x.get('date', 0))
+                    first_date = matches[0].get('date', 0)
+                    # Una jornada típica son 10 partidos en una ventana de ~5 días
+                    matches = [m for m in matches if m.get('date', 0) - first_date <= 5 * 86400][:10]
             except: pass
             
         c1, c2, c3 = st.columns(3)

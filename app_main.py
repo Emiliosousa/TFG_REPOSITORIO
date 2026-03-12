@@ -59,7 +59,7 @@ src_laliga = f"data:image/png;base64,{logo_laliga}" if logo_laliga else URL_LL
 src_bl = f"data:image/png;base64,{logo_bl}" if logo_bl else URL_BL
 src_winamax = f"data:image/png;base64,{logo_winamax}" if logo_winamax else URL_WINA
 
-# --- CSS STYLING (High Fidelity Academic) ---
+# --- CSS STYLING ---
 def load_landing_css():
     st.markdown("""
     <style>

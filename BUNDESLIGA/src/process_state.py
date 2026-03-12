@@ -6,7 +6,26 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(BASE_DIR, '..', 'state_dump.json')
 OUTPUT_FILE = os.path.join(BASE_DIR, '..', 'data', 'live_odds.json')
 
-def extract_matches(data, tournament_id=None):
+# Bundesliga 1 team name fragments - must match BOTH competitors
+BL1_TEAMS = [
+    'Bayern', 'Borussia Dortmund', 'Leipzig', 'Leverkusen',
+    'Frankfurt', 'Stuttgart', 'Freiburg', 'Wolfsburg',
+    'Hoffenheim', 'Augsburg', 'Werder Bremen', 'Union Berlin',
+    'Bochum', 'Heidenheim', 'Holstein Kiel', 'St. Pauli',
+    'Mainz 05', 'Gladbach', 'Mainz',
+]
+
+
+def is_bl1_team(name):
+    """Check if a team name matches a known Bundesliga 1 team."""
+    for frag in BL1_TEAMS:
+        if frag in name:
+            return True
+    return False
+
+
+def extract_bl1_matches(data):
+    """Extract only Bundesliga 1 matches (both teams must be BL1 teams)."""
     results = []
     matches = data.get('matches', {})
     bets = data.get('bets', {})
@@ -19,9 +38,13 @@ def extract_matches(data, tournament_id=None):
             continue
         if match.get('status') != 'PREMATCH':
             continue
-        if tournament_id is not None:
-            if match.get('tournamentId') != tournament_id:
-                continue
+
+        c1 = str(match.get('competitor1Name', ''))
+        c2 = str(match.get('competitor2Name', ''))
+
+        # Both teams must be from Bundesliga 1
+        if not (is_bl1_team(c1) and is_bl1_team(c2)):
+            continue
 
         main_bet_id = match.get('mainBetId')
         if not main_bet_id:
@@ -50,6 +73,7 @@ def extract_matches(data, tournament_id=None):
         })
     return results
 
+
 def main():
     if not os.path.exists(STATE_FILE):
         print(f"Error: State file not found at {STATE_FILE}")
@@ -60,33 +84,33 @@ def main():
             data = json.load(f)
         print("Loaded state dump.")
 
-        # Attempt: Bundesliga
-        print("Extracting Bundesliga matches...")
-        matches = extract_matches(data, tournament_id=None)
+        # Extract Bundesliga 1 matches
+        print("Extracting Bundesliga 1 matches...")
+        matches = extract_bl1_matches(data)
 
-        # Filter to only Bundesliga-like tournaments by searching tournament names
-        if not matches:
-            tourns = data.get('tournaments', {})
-            bl_id = None
-            for tid, t in tourns.items():
-                name = t.get('name', '')
-                if 'Bundesliga' in name and '2' not in name:
-                    bl_id = int(tid)
-                    break
-            if bl_id:
-                print(f"Found Bundesliga under ID {bl_id}.")
-                matches = extract_matches(data, tournament_id=bl_id)
-
+        # Filter out matches without a valid date
+        matches = [m for m in matches if m.get('date', 0) > 0]
+        # Sort by date
         matches.sort(key=lambda x: x.get('date', 0))
-        print(f"Found {len(matches)} matches.")
+
+        # Keep only next matches (up to ~2 matchdays, 14 days window)
+        if matches:
+            first_date = matches[0].get('date', 0)
+            matches = [m for m in matches if m.get('date', 0) - first_date <= 14 * 86400][:18]
+
+        print(f"Found {len(matches)} Bundesliga 1 matches.")
+        for m in matches:
+            print(f"  {m['home']} vs {m['away']} @ {m['1']}/{m['X']}/{m['2']}")
 
         os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
         with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-            json.dump(matches, f, indent=2)
+            json.dump(matches, f, indent=2, ensure_ascii=False)
         print(f"Saved to {OUTPUT_FILE}")
 
     except Exception as e:
         print(f"Error processing state: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == "__main__":

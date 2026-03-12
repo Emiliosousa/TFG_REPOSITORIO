@@ -575,7 +575,7 @@ def main():
             
         c1, c2, c3 = st.columns(3)
         c1.metric("Live Matches", str(len(matches)))
-        c2.metric("Pitbull financiero V3", "[OK] Cargado" if model else "[FAIL] No encontrado")
+        c2.metric("Modelo V3", "[OK] Cargado" if model else "[FAIL] No encontrado")
         c3.metric("Signal Strength", "High")
 
         if not matches:
@@ -603,20 +603,24 @@ def main():
                 
                 eh, ed, ea = (ph*oh)-1, (pd_prob*od)-1, (pa*oa)-1
 
-                def dc_odds(o1, o2): return 1/(1/o1 + 1/o2) if o1>0 and o2>0 else 1.0
-                o_1x, o_x2, o_12 = dc_odds(oh,od), dc_odds(od,oa), dc_odds(oh,oa)
-                p_1x, p_x2, p_12 = min(ph+pd_prob, 1.0), min(pd_prob+pa, 1.0), min(ph+pa, 1.0)
-                e_1x, e_x2, e_12 = p_1x*o_1x-1, p_x2*o_x2-1, p_12*o_12-1
-                
                 h_elo = X_row.get('Home_Elo', 1500) if isinstance(X_row, pd.Series) else 1500
                 a_elo = X_row.get('Away_Elo', 1500) if isinstance(X_row, pd.Series) else 1500
                 rank_diff = abs(h_elo - a_elo) / 100.0
 
-                ev_map = {'1': eh, 'X': ed, '2': ea, '1X': e_1x, 'X2': e_x2, '12': e_12}
-                p_map = {'1': ph, 'X': pd_prob, '2': pa, '1X': p_1x, 'X2': p_x2, '12': p_12}
-                q_map = {'1': oh, 'X': od, '2': oa, '1X': o_1x, 'X2': o_x2, '12': o_12}
-                
-                value_bets = {op for op, ev in ev_map.items() if ev > min_ev}
+                ev_map = {'1': eh, 'X': ed, '2': ea}
+                p_map = {'1': ph, 'X': pd_prob, '2': pa}
+                q_map = {'1': oh, 'X': od, '2': oa}
+
+                ODDS_FILTER = [('1', 1.40, 1.70), ('1', 2.00, 2.50), ('2', 1.70, 2.00)]
+                def passes_odds_filter(op, odds):
+                    return any(op == bt and lo <= odds < hi for bt, lo, hi in ODDS_FILTER)
+
+                candidates = [
+                    op for op in ['1', '2']
+                    if ev_map[op] > min_ev and passes_odds_filter(op, q_map[op])
+                ]
+                best_op = max(candidates, key=lambda op: ev_map[op]) if candidates else None
+                value_bets = {best_op} if best_op else set()
                 st_results = {}
                 for op in ['1', 'X', '2']:
                     st_results[op] = calcular_stake_profesional(p_map[op], q_map[op], user_bankroll, rank_diff)
@@ -625,10 +629,6 @@ def main():
                     # Main Card
                     render_match_card(h, a, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, value_bets)
                     
-                    # Double Chance Row
-                    dc_html = f'''<div style="background:rgba(61,25,91,0.2); border:1px solid rgba(255,40,130,0.1); border-top:none; padding:10px; margin-bottom:10px; border-radius:0 0 12px 12px; margin-top:-10px;"><div style="font-size:9px; opacity:0.4; margin-bottom:6px; font-weight:700; letter-spacing:1px;">DOBLE OPORTUNIDAD</div><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;"><div style="padding:6px; border-radius:4px; text-align:center; background:rgba(0,0,0,0.2); border:1px solid {"#00ff85" if "1X" in value_bets else "rgba(255,255,255,0.05)"};"><div style="font-size:8px; opacity:0.5;">1X</div><div style="font-size:12px; font-weight:700;">{o_1x:.2f}</div><div style="font-size:9px; color:{"#00ff85" if e_1x > 0.03 else "rgba(255,255,255,0.2)"}; font-weight:600;">EV {e_1x:+.1%}</div></div><div style="padding:6px; border-radius:4px; text-align:center; background:rgba(0,0,0,0.2); border:1px solid {"#00ff85" if "X2" in value_bets else "rgba(255,255,255,0.05)"};"><div style="font-size:8px; opacity:0.5;">X2</div><div style="font-size:12px; font-weight:700;">{o_x2:.2f}</div><div style="font-size:9px; color:{"#00ff85" if e_x2 > 0.03 else "rgba(255,255,255,0.2)"}; font-weight:600;">EV {e_x2:+.1%}</div></div><div style="padding:6px; border-radius:4px; text-align:center; background:rgba(0,0,0,0.2); border:1px solid {"#00ff85" if "12" in value_bets else "rgba(255,255,255,0.05)"};"><div style="font-size:8px; opacity:0.5;">12</div><div style="font-size:12px; font-weight:700;">{o_12:.2f}</div><div style="font-size:9px; color:{"#00ff85" if e_12 > 0.03 else "rgba(255,255,255,0.2)"}; font-weight:600;">EV {e_12:+.1%}</div></div></div></div>'''
-                    st.markdown(clean_html(dc_html), unsafe_allow_html=True)
-
                     # Risk Badge
                     risk_lvl = "ALTO" if rank_diff < 0.5 else ("MEDIO" if rank_diff < 1.0 else "BAJO")
                     risk_clr = "#ff2882" if risk_lvl == "ALTO" else ("#f59e0b" if risk_lvl == "MEDIO" else "#00ff85")
@@ -637,9 +637,9 @@ def main():
                     
                     # Stake Table
                     stk_rows = ""
-                    for op_s in ["1", "X", "2", "1X", "X2", "12"]:
+                    for op_s in ["1", "X", "2"]:
                         o_s, e_s = q_map[op_s], ev_map[op_s]
-                        if e_s > min_ev and o_s > 1:
+                        if op_s == best_op:
                             k_r = (p_map[op_s] * o_s - 1) / (o_s - 1)
                             k_f = np.clip(k_r * 0.25, 0, 0.05)
                             imp = round(k_f * user_bankroll, 2)

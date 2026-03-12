@@ -145,10 +145,8 @@ h1, h2, h3, h4, h5, h6 {
     """), unsafe_allow_html=True)
 
 # --- CONSTANTS ---
-DATA_FILE = os.path.join(BASE_DIR, 'notebooks', 'df_final_clean.csv')
-MODEL_V2_FILE = os.path.join(BASE_DIR, 'modelo_city_group.joblib')          # Academic V2
-MODEL_V3_FILE = os.path.join(BASE_DIR, 'notebooks', 'modelo_v3_calibrado.joblib')  # V3
-MODEL_FILE = MODEL_V2_FILE  # legacy alias
+DATA_FILE = os.path.join(BASE_DIR, 'data', 'df_final_clean.csv')
+MODEL_V3_FILE = os.path.join(BASE_DIR, 'modelo_v3_calibrado.joblib')
 METRICS_FILE = os.path.join(BASE_DIR, 'validation_metrics.json')
 ODDS_FILE = os.path.join(BASE_DIR, 'data', 'live_odds.json')
 LOGOS_DIR = os.path.join(BASE_DIR, 'data', 'logos')
@@ -399,9 +397,8 @@ def load_resources():
         except Exception:
             return None
 
-    model_v2 = _load_model(MODEL_V2_FILE)
     model_v3 = _load_model(MODEL_V3_FILE)
-    return df, model_v2, model_v3
+    return df, model_v3
 
 # --- COMPONENTS ---
 def render_header():
@@ -484,8 +481,7 @@ def render_match_card(h, a, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, value_bets=
 def main():
     load_css()
     render_header()
-    df, model_v2, model_v3 = load_resources()
-    model = model_v2  # legacy alias for tabs that use a single model
+    df, model_v3 = load_resources()
     
     with st.sidebar:
         st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/LaLiga_logo_2023.svg/2048px-LaLiga_logo_2023.svg.png", width=100)
@@ -530,8 +526,7 @@ def main():
         c1, c2, c3, c4 = st.columns(4)
         num_matches = len(matches)
         c1.metric("Live Matches", str(num_matches))
-        c2.metric("Pitbull financiero", "[OK] Cargado" if model_v2 else "[FAIL] No encontrado")
-        c3.metric("Regalador de dinero", "[OK] Cargado" if model_v3 else "[FAIL] No encontrado")
+        c2.metric("Modelo V3", "[OK] Cargado" if model_v3 else "[FAIL] No encontrado")
 
         # Real Validation Accuracy from metrics file if it exists
         val_acc = "N/A"
@@ -548,8 +543,8 @@ def main():
         
         if df is None:
             st.warning("Datos no cargados correctamente.", icon=None)
-        elif model_v2 is None and model_v3 is None:
-            st.warning("Ningún modelo cargado. Ejecuta los notebooks V2 y V3 para generar los modelos.", icon=None)
+        elif model_v3 is None:
+            st.warning("Modelo no cargado. Ejecuta el notebook 02_Modelo.ipynb para generar el modelo.", icon=None)
         else:
             def render_model_picks(active_model, model_label, label_color, min_ev=0.03):
                 """Renderiza los picks para un modelo dado en columnas de 2.
@@ -584,26 +579,6 @@ def main():
                     except: oh,od,oa=1,1,1
                     eh, ed, ea = (ph*oh)-1, (pd_prob*od)-1, (pa*oa)-1
 
-                    # --- DOUBLE CHANCE (Doble Oportunidad) ---
-                    # Formula: cuota_doble = 1 / (1/cuota_A + 1/cuota_B)
-                    # Prob_doble = p_A + p_B
-                    def double_chance_odds(o1, o2):
-                        if o1 > 0 and o2 > 0:
-                            return 1.0 / (1.0/o1 + 1.0/o2)
-                        return 1.0
-
-                    o_1x = double_chance_odds(oh, od)
-                    o_x2 = double_chance_odds(od, oa)
-                    o_12 = double_chance_odds(oh, oa)
-
-                    p_1x = min(ph + pd_prob, 1.0)
-                    p_x2 = min(pd_prob + pa, 1.0)
-                    p_12 = min(ph + pa, 1.0)
-
-                    e_1x = p_1x * o_1x - 1
-                    e_x2 = p_x2 * o_x2 - 1
-                    e_12 = p_12 * o_12 - 1
-
                     # Get latest ELO correctly sorted by Date
                     h_sub_all = df[(df['HomeTeam'] == h_clean) | (df['AwayTeam'] == h_clean)].sort_values('Date')
                     a_sub_all = df[(df['HomeTeam'] == a_clean) | (df['AwayTeam'] == a_clean)].sort_values('Date')
@@ -623,52 +598,33 @@ def main():
                     rank_diff = abs(h_elo - a_elo) / 100.0
 
                     st_results = {}
-                    p_map = {'1': ph, 'X': pd_prob, '2': pa, '1X': p_1x, 'X2': p_x2, '12': p_12}
-                    q_map = {'1': oh, 'X': od, '2': oa, '1X': o_1x, 'X2': o_x2, '12': o_12}
+                    p_map = {'1': ph, 'X': pd_prob, '2': pa}
+                    q_map = {'1': oh, 'X': od, '2': oa}
                     for op in ['1', 'X', '2']:
                         st_results[op] = calcular_stake_profesional(
                             p_map[op], q_map[op], user_bankroll, rank_diff
                         )
 
-                    ev_map = {'1': eh, 'X': ed, '2': ea, '1X': e_1x, 'X2': e_x2, '12': e_12}
-                    # Highlight based on model's EV assessment (Kelly staking details in audit section)
-                    value_bets = {op for op, ev in ev_map.items() if ev > min_ev}
+                    ev_map = {'1': eh, 'X': ed, '2': ea}
+
+                    # Filtro de cuotas validado en backtest walk-forward 2012-2024
+                    # Empate excluido: hit rate real ~25% coincide con cuota implícita, sin edge diferencial
+                    ODDS_FILTER = [('1', 1.40, 1.70), ('1', 2.00, 2.50), ('2', 1.70, 2.00)]
+                    def passes_odds_filter(op, odds):
+                        return any(op == bt and lo <= odds < hi for bt, lo, hi in ODDS_FILTER)
+
+                    # Candidatos: EV > umbral + pasan filtro de cuotas
+                    candidates = [
+                        op for op in ['1', '2']
+                        if ev_map[op] > min_ev and passes_odds_filter(op, q_map[op])
+                    ]
+                    # Una sola apuesta por partido: la de mayor EV
+                    best_op = max(candidates, key=lambda op: ev_map[op]) if candidates else None
+                    value_bets = {best_op} if best_op else set()
                     found_any = True
 
                     with cols[col_idx % 2]:
                         render_match_card(h_clean, a_clean, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, value_bets)
-
-                        # Double chance row below the match card
-                        def ev_color_dc(ev):
-                            return "#10b981" if ev > 0.03 else "#ef4444" if ev < -0.05 else "#f59e0b"
-
-                        dc_data = [
-                            ('1X', f'{h_clean} o Empate', o_1x, p_1x, e_1x),
-                            ('X2', f'Empate o {a_clean}', o_x2, p_x2, e_x2),
-                            ('12', f'{h_clean} o {a_clean}', o_12, p_12, e_12),
-                        ]
-                        dc_cells = ""
-                        for code, label, odds_dc, prob_dc, ev_dc in dc_data:
-                            is_value = code in value_bets
-                            border = "2px solid #10b981" if is_value else "1px solid rgba(255,255,255,0.1)"
-                            shadow = "0 0 8px rgba(16,185,129,0.3)" if is_value else "none"
-                            dc_cells += f"""
-                            <div style="padding:8px;border-radius:4px;text-align:center;border:{border};box-shadow:{shadow};">
-                                <div style="font-size:9px;opacity:0.6;font-weight:700;">{code}</div>
-                                <div style="font-size:10px;opacity:0.8;">{label}</div>
-                                <div style="font-size:14px;font-weight:700;">{odds_dc:.2f}</div>
-                                <div style="font-size:10px;color:{ev_color_dc(ev_dc)};">EV {ev_dc:+.1%}</div>
-                                <div style="font-size:9px;opacity:0.5;">P {prob_dc:.0%}</div>
-                            </div>"""
-
-                        dc_html = f"""
-                        <div style="margin-top:4px;margin-bottom:8px;">
-                            <div style="font-size:10px;opacity:0.5;margin-bottom:4px;font-weight:700;">DOBLE OPORTUNIDAD</div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-                                {dc_cells}
-                            </div>
-                        </div>"""
-                        st.markdown(clean_html(dc_html), unsafe_allow_html=True)
 
                         risk_level = "ALTO" if rank_diff < 0.5 else ("MEDIO" if rank_diff < 1.0 else "BAJO")
                         risk_color = "#ef4444" if risk_level == "ALTO" else ("#f59e0b" if risk_level == "MEDIO" else "#10b981")
@@ -689,16 +645,13 @@ def main():
                         stake_rows = ""
                         option_labels = {
                             '1': h_clean, 'X': 'Empate', '2': a_clean,
-                            '1X': f'{h_clean} o Empate', 'X2': f'Empate o {a_clean}', '12': f'{h_clean} o {a_clean}'
                         }
-                        
-                        # Only show viable stakes to save space, or very compact rows.
-                        for idx_op, op in enumerate(['1', 'X', '2', '1X', 'X2', '12']):
-                            if idx_op == 3:
-                                stake_rows += """<tr><td colspan="4" style="padding:2px;text-align:center;opacity:0.3;font-size:8px;border-bottom:1px solid rgba(255,255,255,0.1);"></td></tr>"""
+
+                        # Solo mostrar la apuesta seleccionada como viable; el resto, informativo
+                        for op in ['1', 'X', '2']:
                             odds = q_map[op]
                             ev_val = ev_map[op]
-                            if ev_val > min_ev and odds > 1:
+                            if op == best_op:
                                 kelly_raw = (p_map[op] * odds - 1) / (odds - 1)
                                 kelly_frac = np.clip(kelly_raw * KELLY_FRACTION, 0, MAX_KELLY_STAKE)
                                 importe = round(kelly_frac * user_bankroll, 2)
@@ -857,11 +810,7 @@ def main():
                 if not found_any:
                     st.info("No hay partidos disponibles para este modelo.", icon=None)
 
-            subtab_v2, subtab_v3 = st.tabs(["Pitbull financiero", "Regalador de dinero"])
-            with subtab_v2:
-                render_model_picks(model_v2, "Pitbull financiero (Academic XGBoost)", "#3b82f6", min_ev=0.05)
-            with subtab_v3:
-                render_model_picks(model_v3, "Regalador de dinero (Calibrated)", "#10b981", min_ev=0.03)
+            render_model_picks(model_v3, "Modelo V3 (XGBoost Calibrado)", "#10b981", min_ev=0.05)
 
     with tab2:
         st.markdown(clean_html("""
@@ -900,81 +849,50 @@ def main():
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
             <strong style="color: #f59e0b;">ABOUT THIS MODULE (HISTORICAL AUDIT)</strong><br>
             <span style="font-size: 13px; opacity: 0.8;">
-            Backtesting comparison between <strong>Pitbull financiero</strong> (V2/Academic) and <strong>Regalador de dinero</strong> (V3/Calibrated).
-            <br>• <strong>Methodology</strong>: TimeSeriesSplit (10 Seasons) 2015-2024.
-            <br>• <strong>EV Threshold</strong>: 3% minimum edge.
-            <br>• <strong>Staking</strong>: Flat Stake and Kelly 1/4 Criterion.
+            Walk-forward backtesting del modelo XGBoost calibrado (isotonic, sliding window 5 temporadas).
+            <br>• <strong>Metodología</strong>: Walk-forward sliding 5 temporadas (2015-2024).
+            <br>• <strong>EV Threshold</strong>: 5% mínimo.
+            <br>• <strong>Staking</strong>: Flat Stake 10 EUR · Kill switch activado.
             </span>
         </div>
         """), unsafe_allow_html=True)
 
-        st.markdown("### COMPARACION Y BACKTESTING (2015 - 2024)")
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown(clean_html("""
-            <div style="padding:15px; border-radius:8px; border:1px solid #3b82f6; background:rgba(59,130,246,0.05);">
-                <h4 style="color:#3b82f6; margin-top:0;">Pitbull financiero (V2)</h4>
-                <div style="font-size:12px; margin-bottom:10px; color:#9ca3af;">Academic XGBoost • Flat Kelly</div>
-                <table style="width:100%; font-size:14px; border-collapse:collapse;">
-                    <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><td style="padding:5px 0;">Hit Rate</td><td style="text-align:right; font-weight:bold;">45.2%</td></tr>
-                    <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><td style="padding:5px 0;">Temporadas Positivas</td><td style="text-align:right; font-weight:bold; color:#10b981;">7/10</td></tr>
-                    <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><td style="padding:5px 0;">ROI Flat Stake</td><td style="text-align:right; font-weight:bold; color:#10b981;">+68.4%</td></tr>
-                    <tr><td style="padding:5px 0;">Profit Total (Kelly)</td><td style="text-align:right; font-weight:bold; color:#10b981;">EUR +125,430</td></tr>
-                </table>
-            </div>
-            """), unsafe_allow_html=True)
-            
-        with c2:
-            st.markdown(clean_html("""
-            <div style="padding:15px; border-radius:8px; border:2px solid #10b981; background:rgba(16,185,129,0.05); box-shadow:0 0 15px rgba(16,185,129,0.2);">
-                <h4 style="color:#10b981; margin-top:0;">Regalador de dinero (V3)</h4>
-                <div style="font-size:12px; margin-bottom:10px; color:#9ca3af;">Calibrated XGBoost • Dynamic EV</div>
-                <table style="width:100%; font-size:14px; border-collapse:collapse;">
-                    <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><td style="padding:5px 0;">Hit Rate</td><td style="text-align:right; font-weight:bold;">47.5%</td></tr>
-                    <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><td style="padding:5px 0;">Temporadas Positivas</td><td style="text-align:right; font-weight:bold; color:#10b981;">10/10 (100%)</td></tr>
-                    <tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><td style="padding:5px 0;">ROI Kelly 1/4</td><td style="text-align:right; font-weight:bold; color:#10b981;">+263.94%</td></tr>
-                    <tr><td style="padding:5px 0;">Profit Total (Kelly)</td><td style="text-align:right; font-weight:bold; color:#10b981;">EUR +451,356</td></tr>
-                </table>
-            </div>
-            """), unsafe_allow_html=True)
+        st.markdown("### BACKTESTING WALK-FORWARD (2012 - 2024)")
+        st.markdown("**Metodología:** Sliding window 5 temporadas · EV > 5% · Filtro cuotas validado · Sin kill switch")
 
-        st.markdown("#### Backtesting por Temporada (Regalador de dinero)")
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("ROI Total", "+3.37%")
+        c2.metric("Temporadas positivas", "7/13")
+        c3.metric("Apuestas totales", "514")
+        c4.metric("Bankroll final", "1.173 EUR")
+
+        st.markdown("#### Detalle por temporada")
         backtest_data = [
-            {"Temporada": "2015", "Apuestas": 421, "Hit Rate": "49.9%", "Flat ROI": "+320.2%", "Kelly ROI": "+377.5%"},
-            {"Temporada": "2016", "Apuestas": 438, "Hit Rate": "50.9%", "Flat ROI": "+336.4%", "Kelly ROI": "+437.6%"},
-            {"Temporada": "2017", "Apuestas": 426, "Hit Rate": "50.5%", "Flat ROI": "+254.5%", "Kelly ROI": "+320.5%"},
-            {"Temporada": "2018", "Apuestas": 401, "Hit Rate": "47.6%", "Flat ROI": "+207.5%", "Kelly ROI": "+247.9%"},
-            {"Temporada": "2019", "Apuestas": 420, "Hit Rate": "47.4%", "Flat ROI": "+178.2%", "Kelly ROI": "+224.5%"},
-            {"Temporada": "2020", "Apuestas": 424, "Hit Rate": "50.5%", "Flat ROI": "+174.4%", "Kelly ROI": "+221.7%"},
-            {"Temporada": "2021", "Apuestas": 440, "Hit Rate": "47.3%", "Flat ROI": "+142.8%", "Kelly ROI": "+190.5%"},
-            {"Temporada": "2022", "Apuestas": 519, "Hit Rate": "45.5%", "Flat ROI": "+142.1%", "Kelly ROI": "+208.9%"},
-            {"Temporada": "2023", "Apuestas": 529, "Hit Rate": "44.0%", "Flat ROI": "+132.7%", "Kelly ROI": "+193.9%"},
-            {"Temporada": "2024", "Apuestas": 546, "Hit Rate": "43.8%", "Flat ROI": "+148.2%", "Kelly ROI": "+218.4%"}
+            {"Temporada": "2012", "Apuestas": 65, "ROI": "+25.9%"},
+            {"Temporada": "2013", "Apuestas": 52, "ROI":  "+3.0%"},
+            {"Temporada": "2014", "Apuestas": 39, "ROI":  "+8.4%"},
+            {"Temporada": "2015", "Apuestas": 49, "ROI": "-14.8%"},
+            {"Temporada": "2016", "Apuestas": 33, "ROI":  "-4.2%"},
+            {"Temporada": "2017", "Apuestas": 39, "ROI": "+25.1%"},
+            {"Temporada": "2018", "Apuestas": 40, "ROI": "-14.7%"},
+            {"Temporada": "2019", "Apuestas": 30, "ROI": "-14.6%"},
+            {"Temporada": "2020", "Apuestas": 34, "ROI": "+13.0%"},
+            {"Temporada": "2021", "Apuestas": 45, "ROI":  "-4.0%"},
+            {"Temporada": "2022", "Apuestas": 25, "ROI":  "-4.3%"},
+            {"Temporada": "2023", "Apuestas": 36, "ROI":  "+0.8%"},
+            {"Temporada": "2024", "Apuestas": 27, "ROI": "+10.9%"},
         ]
         st.dataframe(pd.DataFrame(backtest_data), use_container_width=True)
-        
-        # Keep old metrics processing just in case to show the crossvalidation fold stats
-        metrics = []
-        if os.path.exists(METRICS_FILE):
-            try: metrics = json.load(open(METRICS_FILE))
-            except: pass
-            
-        if metrics:
-            st.markdown("#### Cross-Validation Folds Results (Pitbull financiero)")
-            df_metrics = pd.DataFrame(metrics)
-            # Avoid pandas Styler (triggers matplotlib which is incompatible with NumPy 2.x)
-            df_display = df_metrics.copy()
-            for col in ["accuracy", "precision", "recall", "f1"]:
-                if col in df_display.columns:
-                    df_display[col] = df_display[col].apply(lambda x: f"{x:.2%}")
-            st.dataframe(df_display, use_container_width=True)
-            
-            fig = go.Figure()
-            fig.add_trace(go.Bar(x=df_metrics['fold'], y=df_metrics['accuracy'], name='Accuracy', marker_color='#10b981'))
-            fig.add_trace(go.Scatter(x=df_metrics['fold'], y=df_metrics['f1'], name='F1 Score', line=dict(color='#3b82f6', width=3)))
-            fig.update_layout(**get_premium_plotly_layout("Pitbull financiero Stability across Time Folds"))
-            st.plotly_chart(fig, width="stretch")
+
+        st.markdown("#### Filtro de cuotas validado")
+        st.markdown("""
+        | Resultado | Rango cuotas | Validación |
+        |---|---|---|
+        | Local (1) | 1.40 – 1.70 | Walk-forward 2012-2024 |
+        | Local (1) | 2.00 – 2.50 | Walk-forward 2012-2024 |
+        | Visitante (2) | 1.70 – 2.00 | Walk-forward 2012-2024 |
+        | Empate (X) | — | Excluido: hit rate real 25.4% ≈ implícita 26%, sin edge |
+        """)
 
 def get_radar_data(df, team):
     """Calculates granular team metrics for radar chart based on last 10 matches."""

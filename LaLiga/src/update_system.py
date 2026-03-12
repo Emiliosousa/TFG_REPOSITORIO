@@ -24,7 +24,7 @@ try:
 except ImportError:
     import fetch_external_data
 
-DATA_FILE = os.path.join(BASE_DIR, 'df_final_app.csv')
+DATA_FILE = os.path.join(BASE_DIR, 'data', 'df_final_app.csv')
 ODDS_FILE = os.path.join(BASE_DIR, 'data', 'live_odds.json')
 URL_2526 = "https://www.football-data.co.uk/mmz4281/2526/SP1.csv"
 
@@ -120,7 +120,7 @@ def update_dataset():
     print("Database updated successfully.")
 
     # 5b. Also save df_final_clean.csv (used by dashboard & V3 model)
-    CLEAN_FILE = os.path.join(BASE_DIR, 'notebooks', 'df_final_clean.csv')
+    CLEAN_FILE = os.path.join(BASE_DIR, 'data', 'df_final_clean.csv')
     df_clean = df_final.copy()
     # Add Target column (required for model retraining / backtest)
     target_map = {'H': 2, 'D': 1, 'A': 0}

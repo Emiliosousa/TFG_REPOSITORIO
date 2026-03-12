@@ -22,7 +22,7 @@ if not os.path.exists(BUNDESLIGA_DIR):
 
 DATA_FILE = os.path.join(BUNDESLIGA_DIR, 'data', 'processed', 'df_final_clean.csv')
 # Try notebooks first, then root
-_MODEL_NOTEBOOKS = os.path.join(BUNDESLIGA_DIR, 'notebooks', 'modelo_v3_calibrado.joblib')
+_MODEL_NOTEBOOKS = os.path.join(BUNDESLIGA_DIR, 'modelo_v3_calibrado.joblib')
 _MODEL_ROOT = os.path.join(BUNDESLIGA_DIR, 'modelo_v3_calibrado.joblib')
 MODEL_FILE = _MODEL_NOTEBOOKS if os.path.exists(_MODEL_NOTEBOOKS) else _MODEL_ROOT
 ODDS_FILE = os.path.join(BUNDESLIGA_DIR, 'data', 'live_odds.json')
@@ -145,19 +145,19 @@ def get_features_from_model(model):
 
 # Winamax names → CSV names
 TEAM_MAPPING = {
-    'Bayern Munich': 'Bayern Munich', 'Bayern München': 'Bayern Munich', 'FC Bayern München': 'Bayern Munich',
+    'Bayern Munich': 'Bayern Munich', 'Bayern München': 'Bayern Munich', 'FC Bayern München': 'Bayern Munich', 'Bayern Múnich': 'Bayern Munich',
     'Borussia Dortmund': 'Borussia Dortmund', 'BV Borussia Dortmund': 'Borussia Dortmund', 'Dortmund': 'Borussia Dortmund',
     'RB Leipzig': 'RB Leipzig', 'Rasenballsport Leipzig': 'RB Leipzig',
     'Bayer Leverkusen': 'Bayer Leverkusen', 'Bayer 04 Leverkusen': 'Bayer Leverkusen',
     'Eintracht Frankfurt': 'Ein Frankfurt', 'Ein Frankfurt': 'Ein Frankfurt', 'SG Eintracht Frankfurt': 'Ein Frankfurt',
     'VfB Stuttgart': 'VfB Stuttgart',
-    'SC Freiburg': 'SC Freiburg', 'Sport-Club Freiburg': 'SC Freiburg', 'Freiburg': 'SC Freiburg',
-    'VfL Wolfsburg': 'VfL Wolfsburg', 'Wolfsburg': 'VfL Wolfsburg',
+    'SC Freiburg': 'SC Freiburg', 'Sport-Club Freiburg': 'SC Freiburg', 'Freiburg': 'SC Freiburg', 'Friburgo': 'SC Freiburg',
+    'VfL Wolfsburg': 'VfL Wolfsburg', 'Wolfsburg': 'VfL Wolfsburg', 'Wolfsburgo': 'VfL Wolfsburg',
     'Borussia Mönchengladbach': 'Borussia Monchengladbach', "Borussia M'gladbach": 'Borussia Monchengladbach',
     'Borussia Monchengladbach': 'Borussia Monchengladbach', 'Monchengladbach': 'Borussia Monchengladbach',
     '1. FSV Mainz 05': 'FSV Mainz 05', 'FSV Mainz 05': 'FSV Mainz 05', 'Mainz': 'FSV Mainz 05', 'Mainz 05': 'FSV Mainz 05',
     'TSG 1899 Hoffenheim': 'TSG Hoffenheim', 'TSG Hoffenheim': 'TSG Hoffenheim', 'Hoffenheim': 'TSG Hoffenheim',
-    'FC Augsburg': 'FC Augsburg', 'Augsburg': 'FC Augsburg',
+    'FC Augsburg': 'FC Augsburg', 'Augsburg': 'FC Augsburg', 'Augsburgo': 'FC Augsburg',
     'Werder Bremen': 'Werder Bremen', 'SV Werder Bremen': 'Werder Bremen',
     'Union Berlin': 'Union Berlin', '1. FC Union Berlin': 'Union Berlin',
     'VfL Bochum': 'VfL Bochum', 'VfL Bochum 1848': 'VfL Bochum', 'Bochum': 'VfL Bochum',
@@ -451,31 +451,27 @@ Echtzeit-Vergleich der Buchmacher-Quoten mit den AI-Modellwahrscheinlichkeiten. 
                 except: oh,od,oa = 1.0, 1.0, 1.0
                 eh, ed, ea = (ph*oh)-1, (pd_prob*od)-1, (pa*oa)-1
 
-                def dc(o1, o2): return 1/(1/o1+1/o2) if o1>0 and o2>0 else 1.0
-                o_1x, o_x2, o_12 = dc(oh,od), dc(od,oa), dc(oh,oa)
-                p_1x, p_x2, p_12 = min(ph+pd_prob,1), min(pd_prob+pa,1), min(ph+pa,1)
-                e_1x, e_x2, e_12 = p_1x*o_1x-1, p_x2*o_x2-1, p_12*o_12-1
-
                 h_elo = X_row.get('Home_Elo', 1500) if isinstance(X_row, pd.Series) else 1500
                 a_elo = X_row.get('Away_Elo', 1500) if isinstance(X_row, pd.Series) else 1500
                 rank_diff = abs(h_elo - a_elo) / 100.0
 
-                ev_map = {'1': eh, 'X': ed, '2': ea, '1X': e_1x, 'X2': e_x2, '12': e_12}
-                p_map  = {'1': ph, 'X': pd_prob, '2': pa, '1X': p_1x, 'X2': p_x2, '12': p_12}
-                q_map  = {'1': oh, 'X': od, '2': oa, '1X': o_1x, 'X2': o_x2, '12': o_12}
-                value_bets = {op for op, ev in ev_map.items() if ev > min_ev}
+                ev_map = {'1': eh, 'X': ed, '2': ea}
+                p_map  = {'1': ph, 'X': pd_prob, '2': pa}
+                q_map  = {'1': oh, 'X': od, '2': oa}
+
+                ODDS_FILTER = [('1', 1.40, 1.70), ('1', 2.00, 2.50), ('2', 1.70, 2.00)]
+                def passes_odds_filter(op, odds):
+                    return any(op == bt and lo <= odds < hi for bt, lo, hi in ODDS_FILTER)
+
+                candidates = [
+                    op for op in ['1', '2']
+                    if ev_map[op] > min_ev and passes_odds_filter(op, q_map[op])
+                ]
+                best_op = max(candidates, key=lambda op: ev_map[op]) if candidates else None
+                value_bets = {best_op} if best_op else set()
 
                 with cols[idx % 2]:
                     render_match_card(h, a, oh, od, oa, eh, ed, ea, ph, pd_prob, pa, value_bets)
-
-                    # Double Chance
-                    dc_cells = ""
-                    for code, odds_dc, ev_dc in [('1X', o_1x, e_1x), ('X2', o_x2, e_x2), ('12', o_12, e_12)]:
-                        bdr = "#00e676" if code in value_bets else "rgba(255,255,255,0.04)"
-                        clr = "#00e676" if ev_dc > 0.03 else "rgba(255,255,255,0.2)"
-                        dc_cells += f'<div style="padding:5px; border-radius:4px; text-align:center; background:rgba(0,0,0,0.2); border:1px solid {bdr};"><div style="font-size:8px; opacity:0.4;">{code}</div><div style="font-size:11px; font-weight:700;">{odds_dc:.2f}</div><div style="font-size:8px; color:{clr}; font-weight:600;">EV {ev_dc:+.1%}</div></div>'
-                    dc_html = f'<div style="background:#161616; border:1px solid rgba(210,5,21,0.08); border-top:none; padding:8px; margin-bottom:8px; border-radius:0 0 10px 10px; margin-top:-8px;"><div style="font-size:8px; opacity:0.3; margin-bottom:4px; font-weight:700; letter-spacing:1px;">DOPPELTE CHANCE</div><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;">{dc_cells}</div></div>'
-                    st.markdown(clean_html(dc_html), unsafe_allow_html=True)
 
                     # Risk
                     rl = "HOCH" if rank_diff < 0.5 else ("MITTEL" if rank_diff < 1.0 else "NIEDRIG")
@@ -484,9 +480,9 @@ Echtzeit-Vergleich der Buchmacher-Quoten mit den AI-Modellwahrscheinlichkeiten. 
 
                     # Stake Table
                     rows = ""
-                    for op_s in ["1", "X", "2", "1X", "X2", "12"]:
+                    for op_s in ["1", "X", "2"]:
                         o_s, e_s = q_map[op_s], ev_map[op_s]
-                        if e_s > min_ev and o_s > 1:
+                        if op_s == best_op:
                             kr = (p_map[op_s]*o_s-1)/(o_s-1)
                             kf = np.clip(kr*0.25, 0, 0.05)
                             imp = round(kf*user_bankroll, 2)
